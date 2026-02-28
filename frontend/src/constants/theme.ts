@@ -66,28 +66,21 @@ export const FontSize = {
   display: 48,
 };
 
+import { Platform } from 'react-native';
+
 export const Shadows = {
-  sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  } as any,
-  md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-  } as any,
-  lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  } as any,
+  sm: Platform.select({
+    web: { boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
+    default: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
+  }) as any,
+  md: Platform.select({
+    web: { boxShadow: '0 4px 6px rgba(0,0,0,0.1)' },
+    default: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 4 },
+  }) as any,
+  lg: Platform.select({
+    web: { boxShadow: '0 10px 12px rgba(0,0,0,0.15)' },
+    default: { shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 },
+  }) as any,
 };
 
 export type ThemeColors = typeof Colors.light;
