@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Ale
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../src/context/ThemeContext';
-import { Spacing, FontSize, Radius } from '../../src/constants/theme';
+import { Spacing, FontSize, Radius, FontFamily } from '../../src/constants/theme';
 import { PAYMENT_METHODS } from '../../src/constants/categories';
 import { deleteAllData, getAllTransactions, getAllCategories } from '../../src/db/database';
 import { formatDateForCSV, formatTimeForCSV } from '../../src/utils/format';
@@ -30,7 +30,7 @@ export default function SettingsScreen() {
         const catName = catMap.get(tx.categoryId) || 'Unknown';
         csv += `${formatDateForCSV(tx.date)},${formatTimeForCSV(tx.date)},${tx.amount},${catName},"${(tx.note || '').replace(/"/g, '""')}",${tx.paymentMethod},${tx.isRecurring ? 'Yes' : 'No'}\n`;
       }
-      await Share.share({ message: csv, title: `SpendSmart_Export_${new Date().toISOString().slice(0, 7)}.csv` });
+      await Share.share({ message: csv, title: `SmartSpend_Export_${new Date().toISOString().slice(0, 7)}.csv` });
     } catch (error) { Alert.alert('Export Error', 'Failed to export data.'); }
   };
 
@@ -45,7 +45,7 @@ export default function SettingsScreen() {
 
   const SettingsItem = ({ icon, label, onPress, rightContent, destructive }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress?: () => void; rightContent?: React.ReactNode; destructive?: boolean }) => (
     <TouchableOpacity testID={`settings-${label.toLowerCase().replace(/\s/g, '-')}`} onPress={onPress} style={[styles.settingsItem, { borderBottomColor: colors.border }]} activeOpacity={onPress ? 0.6 : 1}>
-      <View style={[styles.settingsIconBg, { backgroundColor: destructive ? colors.danger + '15' : colors.primary + '10' }]}>
+      <View style={[styles.settingsIconBg, { backgroundColor: destructive ? colors.danger + '15' : colors.primary + '15' }]}>
         <Ionicons name={icon} size={20} color={destructive ? colors.danger : colors.primary} />
       </View>
       <Text style={[styles.settingsLabel, { color: destructive ? colors.danger : colors.text }]}>{label}</Text>
@@ -95,7 +95,7 @@ export default function SettingsScreen() {
         </View>
 
         <Text style={[styles.sectionTitle, { color: colors.danger }]}>DANGER ZONE</Text>
-        <View style={[styles.settingsGroup, { backgroundColor: colors.surface }]}>
+        <View style={[styles.settingsGroup, { backgroundColor: colors.danger + '08' }]}>
           <SettingsItem icon="trash-outline" label="Delete All Data" destructive onPress={() => setShowDeleteModal(true)} />
         </View>
         <View style={{ height: 40 }} />
@@ -122,27 +122,27 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { paddingHorizontal: Spacing.xl, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },
-  title: { fontSize: FontSize.xxl, fontWeight: '800' },
+  header: { paddingHorizontal: Spacing.xl, paddingTop: Spacing.xl, paddingBottom: Spacing.sm },
+  title: { fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
   scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 100 },
-  sectionTitle: { fontSize: FontSize.xs, fontWeight: '700', letterSpacing: 1, marginTop: Spacing.xl, marginBottom: Spacing.sm, paddingHorizontal: Spacing.xs },
+  sectionTitle: { fontSize: FontSize.xs, fontFamily: FontFamily.bold, fontWeight: '700', letterSpacing: 1, marginTop: Spacing.xl, marginBottom: Spacing.sm, paddingHorizontal: Spacing.xs },
   card: { borderRadius: Radius.lg, padding: Spacing.lg },
-  cardLabel: { fontSize: FontSize.base, fontWeight: '600', marginBottom: Spacing.sm },
+  cardLabel: { fontSize: FontSize.base, fontFamily: FontFamily.semiBold, fontWeight: '600', marginBottom: Spacing.sm },
   themeRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
   themeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.full, borderWidth: 1.5 },
-  themeText: { fontSize: FontSize.sm },
+  themeText: { fontSize: FontSize.sm, fontFamily: FontFamily.medium },
   settingsGroup: { borderRadius: Radius.lg, overflow: 'hidden' },
   settingsItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, borderBottomWidth: 0.5 },
   settingsIconBg: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  settingsLabel: { flex: 1, marginLeft: Spacing.md, fontSize: FontSize.base, fontWeight: '500' },
+  settingsLabel: { flex: 1, marginLeft: Spacing.md, fontSize: FontSize.base, fontFamily: FontFamily.medium, fontWeight: '500' },
   settingsRight: { marginLeft: Spacing.sm },
-  versionText: { fontSize: FontSize.sm },
+  versionText: { fontSize: FontSize.sm, fontFamily: FontFamily.regular },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   modal: { width: '100%', borderRadius: Radius.lg, padding: Spacing.xl, alignItems: 'center' },
-  modalTitle: { fontSize: FontSize.xl, fontWeight: '800', marginTop: Spacing.md },
-  modalDesc: { fontSize: FontSize.sm, textAlign: 'center', marginTop: Spacing.sm, lineHeight: 20 },
-  modalInput: { width: '100%', height: 48, borderRadius: Radius.md, borderWidth: 1, paddingHorizontal: Spacing.lg, fontSize: FontSize.base, marginTop: Spacing.md, textAlign: 'center' },
+  modalTitle: { fontSize: FontSize.xl, fontFamily: FontFamily.extraBold, fontWeight: '800', marginTop: Spacing.md },
+  modalDesc: { fontSize: FontSize.sm, fontFamily: FontFamily.regular, textAlign: 'center', marginTop: Spacing.sm, lineHeight: 20 },
+  modalInput: { width: '100%', height: 48, borderRadius: Radius.md, borderWidth: 1, paddingHorizontal: Spacing.lg, fontSize: FontSize.base, fontFamily: FontFamily.medium, marginTop: Spacing.md, textAlign: 'center' },
   modalActions: { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.lg, width: '100%' },
   modalBtn: { flex: 1, height: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
-  modalBtnText: { fontSize: FontSize.base, fontWeight: '700' },
+  modalBtnText: { fontSize: FontSize.base, fontFamily: FontFamily.bold, fontWeight: '700' },
 });

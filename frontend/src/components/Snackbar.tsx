@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
-import { Spacing, FontSize, Radius } from '../constants/theme';
+import { View, Text, TouchableOpacity, Animated, StyleSheet, Platform } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import { Spacing, FontSize, Radius, FontFamily } from '../constants/theme';
 
 interface SnackbarProps {
   visible: boolean;
@@ -12,12 +13,13 @@ interface SnackbarProps {
 }
 
 export default function Snackbar({ visible, message, actionLabel, onAction, onDismiss, duration = 4000 }: SnackbarProps) {
+  const { colors, isDark } = useTheme();
   const translateY = useRef(new Animated.Value(100)).current;
 
   useEffect(() => {
     if (visible) {
-      Animated.spring(translateY, { toValue: 0, useNativeDriver: true, tension: 80, friction: 10 }).start();
-      const timer = setTimeout(onDismiss, duration);
+      Animated.spring(translateY, { toValue: 0, useNativeDriver: true, damping: 15 }).start();
+      const timer = setTimeout(() => onDismiss(), duration);
       return () => clearTimeout(timer);
     } else {
       Animated.timing(translateY, { toValue: 100, duration: 200, useNativeDriver: true }).start();
@@ -27,11 +29,19 @@ export default function Snackbar({ visible, message, actionLabel, onAction, onDi
   if (!visible) return null;
 
   return (
-    <Animated.View style={[styles.container, { transform: [{ translateY }] }]} testID="snackbar">
-      <Text style={styles.message} numberOfLines={2}>{message}</Text>
-      {actionLabel && onAction && (
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          backgroundColor: isDark ? colors.surface : '#1F2937',
+          transform: [{ translateY }],
+        },
+      ]}
+    >
+      <Text style={[styles.message, { color: isDark ? colors.text : '#F9FAFB' }]}>{message}</Text>
+      {actionLabel && (
         <TouchableOpacity testID="snackbar-action" onPress={onAction} style={styles.actionBtn}>
-          <Text style={styles.actionText}>{actionLabel}</Text>
+          <Text style={[styles.actionText, { color: colors.primaryLight }]}>{actionLabel}</Text>
         </TouchableOpacity>
       )}
     </Animated.View>
@@ -41,36 +51,33 @@ export default function Snackbar({ visible, message, actionLabel, onAction, onDi
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 90,
+    bottom: Platform.OS === 'ios' ? 100 : 80,
     left: Spacing.lg,
     right: Spacing.lg,
-    backgroundColor: '#323232',
-    borderRadius: Radius.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.md,
     elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    zIndex: 999,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
   message: {
-    color: '#FFF',
-    fontSize: FontSize.sm,
     flex: 1,
+    fontSize: FontSize.sm,
+    fontFamily: FontFamily.medium,
   },
   actionBtn: {
     marginLeft: Spacing.md,
-    paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
   actionText: {
-    color: '#BB86FC',
     fontSize: FontSize.sm,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
 });

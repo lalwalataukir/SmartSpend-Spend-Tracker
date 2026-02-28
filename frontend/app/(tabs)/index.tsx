@@ -4,8 +4,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../src/context/ThemeContext';
-import { Spacing, FontSize, Radius, Shadows } from '../../src/constants/theme';
+import { Spacing, FontSize, Radius, Shadows, FontFamily } from '../../src/constants/theme';
 import {
   getRecentTransactions, getTotalForRange, getAllCategories, getAllBudgetsForMonth,
   getTotalForCategoryInRange, deleteTransaction, insertTransaction, getTransactionById,
@@ -15,6 +16,7 @@ import { formatCurrency, formatMonthYear, getTodayRange, getCurrentMonthRange, g
 import TransactionItem from '../../src/components/TransactionItem';
 import AddTransactionSheet from '../../src/components/AddTransactionSheet';
 import Snackbar from '../../src/components/Snackbar';
+import EmptyState from '../../src/components/EmptyState';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -82,7 +84,7 @@ export default function HomeScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} testID="home-screen">
       <View style={styles.header}>
         <View>
-          <Text style={[styles.appTitle, { color: colors.primary }]}>SpendSmart</Text>
+          <Text style={[styles.appTitle, { color: colors.primary }]}>SmartSpend</Text>
           <Text style={[styles.monthText, { color: colors.textSecondary }]}>{formatMonthYear(new Date())}</Text>
         </View>
         <TouchableOpacity testID="header-settings-btn" onPress={() => router.push('/settings')} style={[styles.settingsBtn, { backgroundColor: colors.surface }]}>
@@ -91,7 +93,13 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.summaryCard, { backgroundColor: colors.primary }]} testID="summary-card">
+        <LinearGradient
+          colors={[colors.gradientStart, colors.gradientEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.summaryCard, Shadows.md]}
+          testID="summary-card"
+        >
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Today</Text>
@@ -103,7 +111,7 @@ export default function HomeScreen() {
               <Text style={styles.summaryAmount}>{formatCurrency(monthTotal)}</Text>
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
         {budgetHealth.length > 0 && (
           <View style={styles.section}>
@@ -134,13 +142,16 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           {recentTransactions.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="receipt-outline" size={48} color={colors.textSecondary} />
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No transactions yet.{'\n'}Tap + to add one.</Text>
-            </View>
+            <EmptyState
+              icon="wallet-outline"
+              title="No expenses yet"
+              subtitle="Start tracking your spending by adding your first expense"
+              actionLabel="Add Expense"
+              onAction={() => setShowAddSheet(true)}
+            />
           ) : (
-            recentTransactions.map(tx => (
-              <TransactionItem key={tx.id} transaction={tx} onDelete={() => handleDelete(tx)} />
+            recentTransactions.map((tx, index) => (
+              <TransactionItem key={tx.id} transaction={tx} index={index} onDelete={() => handleDelete(tx)} />
             ))
           )}
         </View>
@@ -158,28 +169,26 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.xl, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },
-  appTitle: { fontSize: FontSize.xxl, fontWeight: '800' },
-  monthText: { fontSize: FontSize.sm, marginTop: 2 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.xl, paddingTop: Spacing.xl, paddingBottom: Spacing.sm },
+  appTitle: { fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
+  monthText: { fontSize: FontSize.sm, fontFamily: FontFamily.medium, marginTop: 2 },
   settingsBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 100 },
-  summaryCard: { borderRadius: Radius.lg, padding: Spacing.xl, marginTop: Spacing.md, ...Shadows.md },
+  summaryCard: { borderRadius: Radius.lg, padding: Spacing.xl, marginTop: Spacing.md },
   summaryRow: { flexDirection: 'row', alignItems: 'center' },
   summaryItem: { flex: 1, alignItems: 'center' },
-  summaryLabel: { color: 'rgba(255,255,255,0.7)', fontSize: FontSize.sm, fontWeight: '500' },
-  summaryAmount: { color: '#FFF', fontSize: FontSize.xxl, fontWeight: '800', marginTop: 4 },
+  summaryLabel: { color: 'rgba(255,255,255,0.7)', fontSize: FontSize.sm, fontFamily: FontFamily.medium, fontWeight: '500' },
+  summaryAmount: { color: '#FFF', fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', marginTop: 4 },
   summaryDivider: { width: 1, height: 40 },
-  section: { marginTop: Spacing.xl },
+  section: { marginTop: Spacing.xxl },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
-  sectionTitle: { fontSize: FontSize.lg, fontWeight: '700', marginBottom: Spacing.sm },
-  viewAllText: { fontSize: FontSize.sm, fontWeight: '600' },
+  sectionTitle: { fontSize: FontSize.lg, fontFamily: FontFamily.bold, fontWeight: '700', marginBottom: Spacing.sm },
+  viewAllText: { fontSize: FontSize.sm, fontFamily: FontFamily.semiBold, fontWeight: '600' },
   budgetChip: { width: 120, padding: Spacing.md, borderRadius: Radius.md, marginRight: Spacing.sm, borderWidth: 0.5 },
   budgetEmoji: { fontSize: 20 },
-  budgetName: { fontSize: FontSize.xs, fontWeight: '600', marginTop: 4 },
+  budgetName: { fontSize: FontSize.xs, fontFamily: FontFamily.semiBold, fontWeight: '600', marginTop: 4 },
   budgetBar: { height: 4, borderRadius: 2, marginTop: 6, overflow: 'hidden' },
   budgetFill: { height: '100%', borderRadius: 2 },
-  budgetPct: { fontSize: FontSize.xs, fontWeight: '700', marginTop: 4 },
-  emptyState: { alignItems: 'center', paddingVertical: Spacing.xxxl },
-  emptyText: { textAlign: 'center', marginTop: Spacing.md, fontSize: FontSize.base, lineHeight: 22 },
+  budgetPct: { fontSize: FontSize.xs, fontFamily: FontFamily.bold, fontWeight: '700', marginTop: 4 },
   fab: { position: 'absolute', bottom: 90, right: 20, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
 });

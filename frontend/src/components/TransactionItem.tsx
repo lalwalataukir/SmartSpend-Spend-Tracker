@@ -1,58 +1,74 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Swipeable } from 'react-native-gesture-handler';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '../context/ThemeContext';
-import { Spacing, FontSize, Radius, Shadows } from '../constants/theme';
+import { Spacing, FontSize, Radius, Shadows, FontFamily } from '../constants/theme';
 import { formatCurrency, formatTime } from '../utils/format';
 import type { TransactionWithCategory } from '../db/database';
 
 interface TransactionItemProps {
   transaction: TransactionWithCategory;
+  index?: number;
   onPress?: () => void;
   onDelete?: () => void;
 }
 
-export default function TransactionItem({ transaction, onPress, onDelete }: TransactionItemProps) {
+export default function TransactionItem({ transaction, index = 0, onPress, onDelete }: TransactionItemProps) {
   const { colors } = useTheme();
 
+  const renderRightActions = () => {
+    if (!onDelete) return null;
+    return (
+      <TouchableOpacity
+        testID={`delete-transaction-${transaction.id}`}
+        onPress={onDelete}
+        style={styles.deleteAction}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="trash" size={22} color="#FFF" />
+        <Text style={styles.deleteText}>Delete</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const content = (
+    <Swipeable renderRightActions={renderRightActions} overshootRight={false}>
+      <TouchableOpacity
+        testID={`transaction-item-${transaction.id}`}
+        activeOpacity={0.7}
+        onPress={onPress}
+        style={[styles.container, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}
+      >
+        <View style={[styles.iconContainer, { backgroundColor: transaction.categoryColor + '20' }]}>
+          <Text style={styles.emoji}>{transaction.categoryEmoji}</Text>
+        </View>
+        <View style={styles.details}>
+          <Text style={[styles.categoryName, { color: colors.text }]} numberOfLines={1}>
+            {transaction.categoryName}
+          </Text>
+          <Text style={[styles.note, { color: colors.textSecondary }]} numberOfLines={1}>
+            {transaction.note || transaction.paymentMethod}
+            {transaction.isRecurring ? ' 🔄' : ''}
+          </Text>
+        </View>
+        <View style={styles.amountContainer}>
+          <Text style={[styles.amount, { color: colors.danger }]}>
+            -{formatCurrency(transaction.amount)}
+          </Text>
+          <Text style={[styles.time, { color: colors.textSecondary }]}>
+            {formatTime(transaction.date)}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </Swipeable>
+  );
+
   return (
-    <TouchableOpacity
-      testID={`transaction-item-${transaction.id}`}
-      activeOpacity={0.7}
-      onPress={onPress}
-      style={[styles.container, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}
-    >
-      <View style={[styles.iconContainer, { backgroundColor: transaction.categoryColor + '20' }]}>
-        <Text style={styles.emoji}>{transaction.categoryEmoji}</Text>
-      </View>
-      <View style={styles.details}>
-        <Text style={[styles.categoryName, { color: colors.text }]} numberOfLines={1}>
-          {transaction.categoryName}
-        </Text>
-        <Text style={[styles.note, { color: colors.textSecondary }]} numberOfLines={1}>
-          {transaction.note || transaction.paymentMethod}
-          {transaction.isRecurring ? ' 🔄' : ''}
-        </Text>
-      </View>
-      <View style={styles.amountContainer}>
-        <Text style={[styles.amount, { color: colors.danger }]}>
-          -{formatCurrency(transaction.amount)}
-        </Text>
-        <Text style={[styles.time, { color: colors.textSecondary }]}>
-          {formatTime(transaction.date)}
-        </Text>
-      </View>
-      {onDelete && (
-        <TouchableOpacity
-          testID={`delete-transaction-${transaction.id}`}
-          onPress={onDelete}
-          style={styles.deleteBtn}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="trash-outline" size={18} color={colors.danger} />
-        </TouchableOpacity>
-      )}
-    </TouchableOpacity>
+    <Animated.View entering={FadeInDown.delay(index * 60).springify().damping(18)}>
+      {content}
+    </Animated.View>
   );
 }
 
@@ -82,10 +98,12 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: FontSize.base,
+    fontFamily: FontFamily.semiBold,
     fontWeight: '600',
   },
   note: {
     fontSize: FontSize.sm,
+    fontFamily: FontFamily.regular,
     marginTop: 2,
   },
   amountContainer: {
@@ -94,14 +112,27 @@ const styles = StyleSheet.create({
   },
   amount: {
     fontSize: FontSize.base,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
   time: {
     fontSize: FontSize.xs,
+    fontFamily: FontFamily.regular,
     marginTop: 2,
   },
-  deleteBtn: {
+  deleteAction: {
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.sm,
     marginLeft: Spacing.sm,
-    padding: Spacing.xs,
+  },
+  deleteText: {
+    color: '#FFF',
+    fontSize: FontSize.xs,
+    fontFamily: FontFamily.semiBold,
+    marginTop: 2,
   },
 });

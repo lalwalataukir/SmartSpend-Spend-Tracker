@@ -4,11 +4,36 @@ import {
   TextInput, StyleSheet, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, interpolateColor } from 'react-native-reanimated';
 import { useTheme } from '../context/ThemeContext';
-import { Spacing, FontSize, Radius } from '../constants/theme';
+import { Spacing, FontSize, Radius, FontFamily } from '../constants/theme';
 import { PAYMENT_METHODS } from '../constants/categories';
 import CustomNumpad from './CustomNumpad';
 import { getAllCategories, insertTransaction, updateTransaction, type Category, type Transaction } from '../db/database';
+
+const AnimatedToggle = ({ value, onToggle, colors }: { value: boolean; onToggle: () => void; colors: any }) => {
+  const progress = useSharedValue(value ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withSpring(value ? 1 : 0, { damping: 15, stiffness: 120 });
+  }, [value]);
+
+  const trackStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(progress.value, [0, 1], ['#D1D5DB', colors.primary]),
+  }));
+
+  const thumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: withSpring(value ? 22 : 0, { damping: 15, stiffness: 120 }) }],
+  }));
+
+  return (
+    <TouchableOpacity onPress={onToggle} activeOpacity={0.8}>
+      <Animated.View style={[styles.toggle, trackStyle]}>
+        <Animated.View style={[styles.toggleThumb, thumbStyle]} />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
 
 interface AddTransactionSheetProps {
   visible: boolean;
@@ -100,6 +125,11 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
     <Modal visible={visible} animationType="slide" transparent testID="add-transaction-modal">
       <View style={styles.overlay}>
         <View style={[styles.sheet, { backgroundColor: colors.background }]}>
+          {/* Drag handle */}
+          <View style={styles.dragHandleWrapper}>
+            <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
+          </View>
+
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity testID="close-sheet-btn" onPress={onClose} style={styles.closeBtn}>
@@ -174,16 +204,10 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
               ))}
             </View>
 
-            {/* Toggles */}
+            {/* Toggles with animation */}
             <View style={styles.toggleRow}>
               <Text style={[styles.toggleLabel, { color: colors.text }]}>Recurring?</Text>
-              <TouchableOpacity
-                testID="recurring-toggle"
-                onPress={() => setIsRecurring(!isRecurring)}
-                style={[styles.toggle, isRecurring && { backgroundColor: colors.primary }]}
-              >
-                <View style={[styles.toggleThumb, isRecurring && styles.toggleThumbActive]} />
-              </TouchableOpacity>
+              <AnimatedToggle value={isRecurring} onToggle={() => setIsRecurring(!isRecurring)} colors={colors} />
             </View>
             {isRecurring && (
               <View style={styles.paymentRow}>
@@ -208,13 +232,7 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
 
             <View style={styles.toggleRow}>
               <Text style={[styles.toggleLabel, { color: colors.text }]}>Split?</Text>
-              <TouchableOpacity
-                testID="split-toggle"
-                onPress={() => setIsSplit(!isSplit)}
-                style={[styles.toggle, isSplit && { backgroundColor: colors.primary }]}
-              >
-                <View style={[styles.toggleThumb, isSplit && styles.toggleThumbActive]} />
-              </TouchableOpacity>
+              <AnimatedToggle value={isSplit} onToggle={() => setIsSplit(!isSplit)} colors={colors} />
             </View>
             {isSplit && (
               <TextInput
@@ -238,6 +256,7 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
             onPress={handleSave}
             disabled={!canSave}
             style={[styles.saveBtn, { backgroundColor: canSave ? colors.primary : colors.border }]}
+            activeOpacity={0.8}
           >
             <Text style={[styles.saveBtnText, { color: canSave ? '#FFF' : colors.textSecondary }]}>
               {editTransaction ? 'Update' : 'Save'}
@@ -261,12 +280,21 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 34 : 16,
     maxHeight: '95%',
   },
+  dragHandleWrapper: {
+    alignItems: 'center',
+    paddingTop: Spacing.sm,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.sm,
   },
   closeBtn: {
@@ -277,6 +305,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: FontSize.lg,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
   scrollContent: {
@@ -291,15 +320,18 @@ const styles = StyleSheet.create({
   },
   currencySymbol: {
     fontSize: FontSize.xxxl,
+    fontFamily: FontFamily.regular,
     fontWeight: '300',
     marginRight: 4,
   },
   amountText: {
     fontSize: FontSize.display,
+    fontFamily: FontFamily.extraBold,
     fontWeight: '800',
   },
   sectionLabel: {
     fontSize: FontSize.sm,
+    fontFamily: FontFamily.semiBold,
     fontWeight: '600',
     marginBottom: Spacing.sm,
     marginTop: Spacing.md,
@@ -324,6 +356,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: FontSize.sm,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
   },
   noteInput: {
@@ -332,6 +365,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: Spacing.lg,
     fontSize: FontSize.base,
+    fontFamily: FontFamily.regular,
     marginTop: Spacing.sm,
   },
   paymentRow: {
@@ -348,6 +382,7 @@ const styles = StyleSheet.create({
   },
   paymentText: {
     fontSize: FontSize.sm,
+    fontFamily: FontFamily.medium,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -357,6 +392,7 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: FontSize.base,
+    fontFamily: FontFamily.medium,
     fontWeight: '500',
   },
   toggle: {
@@ -372,9 +408,11 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     backgroundColor: '#FFF',
-  },
-  toggleThumbActive: {
-    alignSelf: 'flex-end',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
   },
   saveBtn: {
     marginHorizontal: Spacing.lg,
@@ -386,6 +424,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     fontSize: FontSize.lg,
+    fontFamily: FontFamily.bold,
     fontWeight: '700',
   },
 });

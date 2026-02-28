@@ -5,7 +5,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useTheme } from '../../src/context/ThemeContext';
-import { Spacing, FontSize, Radius, Shadows } from '../../src/constants/theme';
+import { Spacing, FontSize, Radius, Shadows, FontFamily } from '../../src/constants/theme';
 import {
   getAllTransactions, getTransactionsByDateRange, searchTransactions,
   deleteTransaction, insertTransaction, getTransactionById, getAllCategories,
@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import TransactionItem from '../../src/components/TransactionItem';
 import AddTransactionSheet from '../../src/components/AddTransactionSheet';
 import Snackbar from '../../src/components/Snackbar';
+import EmptyState from '../../src/components/EmptyState';
 
 type FilterType = 'all' | 'this_month' | 'last_month' | 'category';
 
@@ -131,10 +132,13 @@ export default function HistoryScreen() {
       )}
 
       {groupedData.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Ionicons name="receipt-outline" size={64} color={colors.textSecondary} />
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No transactions yet.{'\n'}Tap + to add one.</Text>
-        </View>
+        <EmptyState
+          icon="calendar-outline"
+          title="No history yet"
+          subtitle="Your transaction history will appear here once you start tracking"
+          actionLabel="Add First Expense"
+          onAction={() => { setEditTransaction(null); setShowAddSheet(true); }}
+        />
       ) : (
         <SectionList sections={groupedData} keyExtractor={item => item.id.toString()}
           renderSectionHeader={({ section }) => (
@@ -143,7 +147,7 @@ export default function HistoryScreen() {
               <Text style={[styles.sectionTotal, { color: colors.danger }]}>-{formatCurrency(section.total)}</Text>
             </View>
           )}
-          renderItem={({ item }) => (<View style={styles.itemContainer}><TransactionItem transaction={item} onPress={() => handleEdit(item)} onDelete={() => handleDelete(item)} /></View>)}
+          renderItem={({ item, index }) => (<View style={styles.itemContainer}><TransactionItem transaction={item} index={index} onPress={() => handleEdit(item)} onDelete={() => handleDelete(item)} /></View>)}
           contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}
         />
       )}
@@ -159,21 +163,19 @@ export default function HistoryScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { paddingHorizontal: Spacing.xl, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },
-  title: { fontSize: FontSize.xxl, fontWeight: '800' },
+  header: { paddingHorizontal: Spacing.xl, paddingTop: Spacing.xl, paddingBottom: Spacing.sm },
+  title: { fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
   searchBar: { flexDirection: 'row', alignItems: 'center', marginHorizontal: Spacing.lg, paddingHorizontal: Spacing.md, height: 44, borderRadius: Radius.md, borderWidth: 1 },
-  searchInput: { flex: 1, marginLeft: Spacing.sm, fontSize: FontSize.base, height: '100%' },
+  searchInput: { flex: 1, marginLeft: Spacing.sm, fontSize: FontSize.base, fontFamily: FontFamily.regular, height: '100%' },
   filterRow: { maxHeight: 48, marginTop: Spacing.sm },
   filterContent: { paddingHorizontal: Spacing.lg, gap: Spacing.sm },
   filterChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.full, borderWidth: 1.5 },
   filterEmoji: { fontSize: 14, marginRight: 4 },
-  filterText: { fontSize: FontSize.sm, fontWeight: '500' },
+  filterText: { fontSize: FontSize.sm, fontFamily: FontFamily.medium, fontWeight: '500' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg },
-  sectionTitle: { fontSize: FontSize.sm, fontWeight: '700' },
-  sectionTotal: { fontSize: FontSize.sm, fontWeight: '600' },
+  sectionTitle: { fontSize: FontSize.sm, fontFamily: FontFamily.bold, fontWeight: '700' },
+  sectionTotal: { fontSize: FontSize.sm, fontFamily: FontFamily.semiBold, fontWeight: '600' },
   itemContainer: { paddingHorizontal: Spacing.lg },
   listContent: { paddingBottom: 100 },
-  emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 100 },
-  emptyText: { textAlign: 'center', marginTop: Spacing.lg, fontSize: FontSize.base, lineHeight: 22 },
   fab: { position: 'absolute', bottom: 90, right: 20, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
 });

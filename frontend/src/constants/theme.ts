@@ -1,7 +1,15 @@
+export const FontFamily = {
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semiBold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+  extraBold: 'Inter_800ExtraBold',
+};
+
 export const Colors = {
   light: {
-    primary: '#1A56DB',
-    primaryLight: '#3B82F6',
+    primary: '#4F46E5',
+    primaryLight: '#818CF8',
     primaryForeground: '#FFFFFF',
     background: '#FFFFFF',
     surface: '#F3F4F6',
@@ -12,14 +20,16 @@ export const Colors = {
     success: '#10B981',
     danger: '#EF4444',
     warning: '#F59E0B',
-    info: '#3B82F6',
+    info: '#818CF8',
     numpadBg: '#F9FAFB',
     numpadKey: '#FFFFFF',
     shimmer: '#E5E7EB',
+    gradientStart: '#4F46E5',
+    gradientEnd: '#7C3AED',
   },
   dark: {
-    primary: '#3B82F6',
-    primaryLight: '#60A5FA',
+    primary: '#818CF8',
+    primaryLight: '#A5B4FC',
     primaryForeground: '#FFFFFF',
     background: '#121212',
     surface: '#1E1E1E',
@@ -30,10 +40,12 @@ export const Colors = {
     success: '#34D399',
     danger: '#F87171',
     warning: '#FBBF24',
-    info: '#60A5FA',
+    info: '#A5B4FC',
     numpadBg: '#1A1A1A',
     numpadKey: '#2C2C2C',
     shimmer: '#374151',
+    gradientStart: '#4338CA',
+    gradientEnd: '#6D28D9',
   },
 };
 
