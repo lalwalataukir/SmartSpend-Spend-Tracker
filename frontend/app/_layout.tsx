@@ -36,25 +36,6 @@ function InnerLayout() {
     init();
   }, []);
 
-  if (!dbReady || showOnboarding === null) {
-    return (
-      <View style={[styles.loader, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  if (showOnboarding) {
-    return (
-      <OnboardingFlow
-        onComplete={async () => {
-          await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-          setShowOnboarding(false);
-        }}
-      />
-    );
-  }
-
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -63,6 +44,25 @@ function InnerLayout() {
         <Stack.Screen name="manage-categories" options={{ presentation: 'card', headerShown: false }} />
         <Stack.Screen name="manage-budgets" options={{ presentation: 'card', headerShown: false }} />
       </Stack>
+
+      {/* Loading overlay */}
+      {(!dbReady || showOnboarding === null) && (
+        <View style={[styles.overlay, { backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      )}
+
+      {/* Onboarding overlay — shown on first launch */}
+      {showOnboarding && dbReady && (
+        <View style={styles.overlay}>
+          <OnboardingFlow
+            onComplete={async () => {
+              await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+              setShowOnboarding(false);
+            }}
+          />
+        </View>
+      )}
     </>
   );
 }
@@ -93,4 +93,5 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
+  overlay: { ...StyleSheet.absoluteFillObject, zIndex: 10 },
 });
