@@ -1,0 +1,210 @@
+{
+  "identity": {
+    "persona": "E1",
+    "mission": "Create a top 1% manual expense tracker that feels effortless, tactile, and emotionally rewarding.",
+    "principles": [
+      "Fusion over Imitation: Blend financial utility with lifestyle app aesthetics.",
+      "Emotion First: Spending tracking is stressful; the UI must be calming and encouraging.",
+      "Content is King: The numbers (money) are the hero. Legibility and hierarchy are paramount.",
+      "Zoom In: Focus on the 'Amount' input experience. It's the core interaction.",
+      "Negative Space: Use whitespace to reduce cognitive load in data-heavy screens."
+    ]
+  },
+  "tech_stack": {
+    "framework": "React Native (Expo)",
+    "navigation": "expo-router",
+    "styling": "StyleSheet.create() (NO Tailwind/NativeWind)",
+    "icons": "lucide-react-native",
+    "charts": "victory-native",
+    "database": "expo-sqlite",
+    "storage": "AsyncStorage (for preferences)",
+    "notifications": "expo-notifications",
+    "utils": ["date-fns", "clsx", "expo-haptics"]
+  },
+  "theme": {
+    "colors": {
+      "light": {
+        "primary": "#1A56DB",
+        "primary_foreground": "#FFFFFF",
+        "background": "#FFFFFF",
+        "surface": "#F3F4F6",
+        "surface_highlight": "#FFFFFF",
+        "text": "#111827",
+        "text_secondary": "#6B7280",
+        "border": "#E5E7EB",
+        "success": "#10B981",
+        "danger": "#EF4444",
+        "warning": "#F59E0B",
+        "info": "#3B82F6",
+        "income": "#10B981",
+        "expense": "#EF4444"
+      },
+      "dark": {
+        "primary": "#3B82F6",
+        "primary_foreground": "#FFFFFF",
+        "background": "#121212",
+        "surface": "#1E1E1E",
+        "surface_highlight": "#2C2C2C",
+        "text": "#F9FAFB",
+        "text_secondary": "#9CA3AF",
+        "border": "#374151",
+        "success": "#34D399",
+        "danger": "#F87171",
+        "warning": "#FBBF24",
+        "info": "#60A5FA",
+        "income": "#34D399",
+        "expense": "#F87171"
+      }
+    },
+    "typography": {
+      "font_family": {
+        "regular": "System",
+        "medium": "System-Medium",
+        "bold": "System-Bold",
+        "heavy": "System-Heavy"
+      },
+      "sizes": {
+        "xs": 12,
+        "sm": 14,
+        "base": 16,
+        "lg": 18,
+        "xl": 20,
+        "2xl": 24,
+        "3xl": 30,
+        "4xl": 36,
+        "display": 48
+      }
+    },
+    "spacing": {
+      "xs": 4,
+      "sm": 8,
+      "md": 12,
+      "lg": 16,
+      "xl": 24,
+      "2xl": 32,
+      "3xl": 48
+    },
+    "radius": {
+      "sm": 8,
+      "md": 12,
+      "lg": 16,
+      "xl": 24,
+      "full": 9999
+    },
+    "shadows": {
+      "sm": {
+        "shadowColor": "#000",
+        "shadowOffset": { "width": 0, "height": 1 },
+        "shadowOpacity": 0.05,
+        "shadowRadius": 2,
+        "elevation": 2
+      },
+      "md": {
+        "shadowColor": "#000",
+        "shadowOffset": { "width": 0, "height": 4 },
+        "shadowOpacity": 0.1,
+        "shadowRadius": 6,
+        "elevation": 4
+      },
+      "lg": {
+        "shadowColor": "#000",
+        "shadowOffset": { "width": 0, "height": 10 },
+        "shadowOpacity": 0.15,
+        "shadowRadius": 12,
+        "elevation": 8
+      }
+    }
+  },
+  "layout_strategies": {
+    "spacing_system": "Use multiples of 4. Minimum touch target is 48x48px.",
+    "safe_area": "ALWAYS wrap screen content in SafeAreaView or use useSafeAreaInsets.",
+    "containers": "Use paddingHorizontal: 16 (lg) or 24 (xl) for screen containers.",
+    "cards": "Use borderRadius: 16 (lg). Add internal padding: 16 (lg) or 20.",
+    "bottom_sheet": "Top-only corners with borderRadius: 24 (xl)."
+  },
+  "components": {
+    "Button": {
+      "variants": ["primary", "secondary", "ghost", "destructive"],
+      "style": "Height 48px or 56px. Rounded-full or Rounded-xl. Font-weight: Medium/Bold.",
+      "interaction": "Must use TouchableOpacity or Pressable with activeOpacity/style changes."
+    },
+    "Card": {
+      "style": "Background color: surface. Border radius: 16. Optional subtle shadow.",
+      "usage": "Transaction items, summary blocks, insights widgets."
+    },
+    "CustomNumpad": {
+      "grid": "3 columns x 4 rows",
+      "keys": ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "Backspace"],
+      "style": "Button height: 64px-72px. Text size: 24px-28px. Minimal borders or distinct background circles."
+    },
+    "Input": {
+      "style": "Height: 48px-56px. BorderWidth: 1. BorderRadius: 12. PaddingHorizontal: 16.",
+      "focus": "BorderColor: Primary."
+    },
+    "Charts": {
+      "library": "victory-native",
+      "types": ["VictoryPie (Donut)", "VictoryBar (Rounded)", "VictoryLine (Spline)"],
+      "style": "Clean, minimal axis labels. Use theme colors."
+    }
+  },
+  "screens": {
+    "Home": {
+      "layout": "Header with Greeting & Date. Daily Summary Card (Primary Color). 'Recent Transactions' List.",
+      "fab": "Bottom Right. Action: Open Add Transaction Sheet."
+    },
+    "History": {
+      "layout": "Search Bar (Top). Filter Chips (Horizontal Scroll). SectionList (grouped by Date).",
+      "transaction_item": "Icon (Left), Category/Note (Middle), Amount (Right, Green/Red)."
+    },
+    "Insights": {
+      "layout": "Month Selector. Total Spending Summary. Category Breakdown (Pie Chart). Weekly Spending (Bar Chart).",
+      "visuals": "Use cards for each chart section."
+    },
+    "Settings": {
+      "layout": "List of options grouped by section (Preferences, Data, About).",
+      "items": "Theme Toggle, Manage Categories, Export CSV, Wipe Data."
+    },
+    "AddTransaction": {
+      "type": "Modal or Bottom Sheet",
+      "layout": "Amount Display (Huge Text). Numpad (Bottom Half). Category/Date/Note inputs (Middle, scrollable if needed)."
+    }
+  },
+  "database_schema": {
+    "tables": [
+      {
+        "name": "transactions",
+        "columns": "id (INTEGER PK), amount (REAL), type (TEXT: 'expense'|'income'), category_id (INTEGER), date (INTEGER/ISO), note (TEXT), is_recurring (INTEGER)"
+      },
+      {
+        "name": "categories",
+        "columns": "id (INTEGER PK), name (TEXT), icon (TEXT), color (TEXT), type (TEXT), budget_limit (REAL)"
+      }
+    ]
+  },
+  "assets": {
+    "icons": {
+      "library": "lucide-react-native",
+      "style": "Stroke width: 2 or 2.5. Size: 24 (default), 20 (small), 32 (large)."
+    },
+    "images": "Use local assets if needed, but rely mostly on icons and code-drawn shapes."
+  },
+  "universal_guidelines": [
+    "REACT NATIVE SPECIFIC: Do NOT use className or HTML tags (div, span, etc.). Use View, Text, ScrollView, TouchableOpacity.",
+    "STYLES: Use StyleSheet.create(). Avoid inline styles for complex objects.",
+    "THEME: Create a 'useTheme' hook or Context to manage Light/Dark mode and supply colors.",
+    "OFFLINE FIRST: Initialize SQLite database on app launch. Handle all CRUD operations locally.",
+    "ACCESSIBILITY: Add accessibilityLabel and accessibilityRole to all interactive elements.",
+    "HAPTICS: Use expo-haptics for Numpad presses and success actions.",
+    "TOASTS: Use a custom overlay or simple library for feedback (e.g., 'Transaction Saved').",
+    "CURRENCY: Always format amounts with '₹' and 2 decimal places (e.g., ₹1,250.00).",
+    "TEST IDS: Add testID='...' to all touchables and inputs for testing."
+  ],
+  "instructions_to_main_agent": [
+    "1. INITIALIZE: Install missing deps: expo-sqlite, victory-native, expo-notifications, expo-haptics, date-fns, lucide-react-native, clsx.",
+    "2. SETUP: Create /app/constants/theme.js, /app/context/ThemeContext.js, /app/db/database.js.",
+    "3. NAVIGATION: Set up Expo Router tabs in /app/(tabs)/.",
+    "4. COMPONENTS: Build atomic components first (ThemedText, Button, Card, Input).",
+    "5. FEATURES: Implement Database Layer -> Add Transaction Flow -> Home Screen -> History -> Insights.",
+    "6. POLISH: Add charts, animations (LayoutAnimation), and haptics."
+  ]
+}
