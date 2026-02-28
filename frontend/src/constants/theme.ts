@@ -73,21 +73,21 @@ export const Shadows = {
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
-  },
+  } as any,
   md: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 4,
-  },
+  } as any,
   lg: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
-  },
+  } as any,
 };
 
 export type ThemeColors = typeof Colors.light;
