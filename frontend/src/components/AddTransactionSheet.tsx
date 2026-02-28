@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, Modal, ScrollView,
-  TextInput, StyleSheet, KeyboardAvoidingView, Platform, Dimensions,
+  TextInput, StyleSheet, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSQLiteContext } from 'expo-sqlite';
 import { useTheme } from '../context/ThemeContext';
-import { Spacing, FontSize, Radius, Shadows } from '../constants/theme';
+import { Spacing, FontSize, Radius } from '../constants/theme';
 import { PAYMENT_METHODS } from '../constants/categories';
 import CustomNumpad from './CustomNumpad';
 import { getAllCategories, insertTransaction, updateTransaction, type Category, type Transaction } from '../db/database';
-import { formatCurrency, getMonthYearKey } from '../utils/format';
 
 interface AddTransactionSheetProps {
   visible: boolean;
@@ -20,13 +18,11 @@ interface AddTransactionSheetProps {
 }
 
 export default function AddTransactionSheet({ visible, onClose, onSaved, editTransaction }: AddTransactionSheetProps) {
-  const db = useSQLiteContext();
   const { colors, defaultPaymentMethod } = useTheme();
   const [amountStr, setAmountStr] = useState('0');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [note, setNote] = useState('');
   const [paymentMethod, setPaymentMethod] = useState(defaultPaymentMethod);
-  const [date, setDate] = useState(new Date());
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState<'weekly' | 'monthly'>('monthly');
   const [isSplit, setIsSplit] = useState(false);
@@ -35,14 +31,12 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
 
   useEffect(() => {
     if (visible) {
-      const cats = getAllCategories(db);
-      setCategories(cats);
+      setCategories(getAllCategories());
       if (editTransaction) {
         setAmountStr(editTransaction.amount.toString());
         setSelectedCategoryId(editTransaction.categoryId);
         setNote(editTransaction.note || '');
         setPaymentMethod(editTransaction.paymentMethod);
-        setDate(new Date(editTransaction.date));
         setIsRecurring(!!editTransaction.isRecurring);
         setRecurringInterval(editTransaction.recurringIntervalDays === 7 ? 'weekly' : 'monthly');
         setIsSplit(!!editTransaction.isSplit);
@@ -52,7 +46,6 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
         setSelectedCategoryId(null);
         setNote('');
         setPaymentMethod(defaultPaymentMethod);
-        setDate(new Date());
         setIsRecurring(false);
         setIsSplit(false);
         setSplitShareStr('0');
@@ -84,7 +77,7 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
       amount,
       categoryId: selectedCategoryId!,
       note,
-      date: date.getTime(),
+      date: Date.now(),
       paymentMethod,
       isRecurring: isRecurring ? 1 : 0,
       recurringIntervalDays: isRecurring ? (recurringInterval === 'weekly' ? 7 : 30) : null,
@@ -94,10 +87,10 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
 
     let txId: number;
     if (editTransaction) {
-      updateTransaction(db, { ...txData, id: editTransaction.id });
+      updateTransaction({ ...txData, id: editTransaction.id });
       txId = editTransaction.id;
     } else {
-      txId = insertTransaction(db, txData);
+      txId = insertTransaction(txData);
     }
     onSaved(txId);
     onClose();
@@ -105,7 +98,7 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
 
   return (
     <Modal visible={visible} animationType="slide" transparent testID="add-transaction-modal">
-      <View style={[styles.overlay]}>
+      <View style={styles.overlay}>
         <View style={[styles.sheet, { backgroundColor: colors.background }]}>
           {/* Header */}
           <View style={styles.header}>
