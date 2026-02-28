@@ -8,7 +8,28 @@ SmartSpend is a fast, offline-first Android expense tracking app built with Reac
 
 ## Screenshots
 
-> Coming soon — UI in progress.
+<table>
+  <tr>
+    <td align="center"><b>Onboarding</b></td>
+    <td align="center"><b>Home</b></td>
+    <td align="center"><b>History</b></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/onboarding.png" width="260" /></td>
+    <td><img src="screenshots/home.png" width="260" /></td>
+    <td><img src="screenshots/history.png" width="260" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Insights</b></td>
+    <td align="center"><b>Settings</b></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/insights.png" width="260" /></td>
+    <td><img src="screenshots/settings.png" width="260" /></td>
+    <td></td>
+  </tr>
+</table>
 
 ---
 
@@ -17,13 +38,17 @@ SmartSpend is a fast, offline-first Android expense tracking app built with Reac
 - **Quick Add** — Log a transaction in under 10 seconds with a custom numpad. Amount + category is all you need.
 - **Transaction History** — Scrollable, searchable list of all your expenses grouped by date. Swipe to delete.
 - **Category Breakdown** — 12 default categories (Food, Transport, Shopping, etc.) + add your own with a custom emoji and color.
+- **Donut Chart** — Visualize category spending with an interactive SVG donut chart.
 - **Monthly Summary** — Total spent, daily average, and category-wise breakdown at a glance.
 - **Budget Alerts** — Set monthly limits per category. Get notified at 80% and 100% usage.
 - **Recurring Expenses** — Mark rent, subscriptions, and other repeating costs so they log automatically.
+- **Spending Nudges** — Smart tips and alerts based on your spending patterns.
 - **Search & Filter** — Filter by category, date range, or payment method (UPI, Cash, Card).
 - **CSV Export** — Export your full transaction history and share it via any app.
 - **Dark Mode** — Respects your system setting out of the box.
 - **Offline First** — Works 100% without internet. All data stays on your device.
+- **Onboarding Flow** — Beautiful 3-slide introduction for first-time users.
+- **Haptic Feedback** — Tactile response on key interactions (native only).
 
 ---
 
@@ -34,8 +59,12 @@ SmartSpend is a fast, offline-first Android expense tracking app built with Reac
 | Framework | React Native (Expo) |
 | Language | TypeScript |
 | Local Storage | expo-sqlite + AsyncStorage |
-| Navigation | React Navigation (Bottom Tabs) |
-| Charts | Victory Native |
+| Navigation | React Navigation (Custom Floating Tab Bar) |
+| Charts | react-native-svg (DonutChart) |
+| Animations | react-native-reanimated |
+| Gestures | react-native-gesture-handler |
+| Typography | Inter (Google Fonts via expo-font) |
+| Haptics | expo-haptics |
 | Notifications | expo-notifications |
 | Background Tasks | expo-task-manager |
 | Styling | React Native StyleSheet + custom theme |
@@ -122,6 +151,9 @@ SmartSpend/
 - [x] Monthly summary & charts
 - [x] Budget alerts
 - [x] CSV export
+- [x] Premium UI overhaul (custom fonts, gradients, animations)
+- [x] Onboarding flow
+- [x] Donut chart for insights
 - [ ] UPI SMS auto-detection
 - [ ] Home screen widget
 - [ ] Split expense tracking
