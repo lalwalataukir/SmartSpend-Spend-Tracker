@@ -128,7 +128,7 @@
     "transaction_edit": "NOT TESTED - Edit modal should open on transaction tap in History"
   },
   "notes": {
-    "environment": "Testing done on Expo web preview at https://kotlin-spend-app.preview.emergentagent.com",
+    "environment": "Testing done on Expo web preview at https://transaction-insights-2.preview.emergentagent.com",
     "mobile_viewport": "375x667 (mobile-first testing)",
     "console_warnings": "Multiple deprecation warnings for pointerEvents, useNativeDriver, shadow props - these don't affect functionality but should be addressed for future compatibility",
     "asyncstorage_web": "AsyncStorage on web uses localStorage - data should persist but is not working correctly, needs investigation"
