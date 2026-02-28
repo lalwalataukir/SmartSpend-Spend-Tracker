@@ -55,15 +55,42 @@ let nextTxId = 1;
 let nextCatId = 13; // After 12 default categories
 let nextBudgetId = 1;
 
-async function persist() {
-  await Promise.all([
-    AsyncStorage.setItem(KEYS.transactions, JSON.stringify(txCache)),
-    AsyncStorage.setItem(KEYS.categories, JSON.stringify(catCache)),
-    AsyncStorage.setItem(KEYS.budgets, JSON.stringify(budgetCache)),
-    AsyncStorage.setItem(KEYS.nextTxId, nextTxId.toString()),
-    AsyncStorage.setItem(KEYS.nextCatId, nextCatId.toString()),
-    AsyncStorage.setItem(KEYS.nextBudgetId, nextBudgetId.toString()),
-  ]);
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
+
+function persist() {
+  // Debounce writes to avoid excessive AsyncStorage calls
+  if (persistTimer) clearTimeout(persistTimer);
+  persistTimer = setTimeout(async () => {
+    try {
+      await Promise.all([
+        AsyncStorage.setItem(KEYS.transactions, JSON.stringify(txCache)),
+        AsyncStorage.setItem(KEYS.categories, JSON.stringify(catCache)),
+        AsyncStorage.setItem(KEYS.budgets, JSON.stringify(budgetCache)),
+        AsyncStorage.setItem(KEYS.nextTxId, nextTxId.toString()),
+        AsyncStorage.setItem(KEYS.nextCatId, nextCatId.toString()),
+        AsyncStorage.setItem(KEYS.nextBudgetId, nextBudgetId.toString()),
+      ]);
+    } catch (e) {
+      console.error('persist error:', e);
+    }
+  }, 100);
+}
+
+// Force immediate persist (used after critical writes)
+async function persistNow() {
+  if (persistTimer) clearTimeout(persistTimer);
+  try {
+    await Promise.all([
+      AsyncStorage.setItem(KEYS.transactions, JSON.stringify(txCache)),
+      AsyncStorage.setItem(KEYS.categories, JSON.stringify(catCache)),
+      AsyncStorage.setItem(KEYS.budgets, JSON.stringify(budgetCache)),
+      AsyncStorage.setItem(KEYS.nextTxId, nextTxId.toString()),
+      AsyncStorage.setItem(KEYS.nextCatId, nextCatId.toString()),
+      AsyncStorage.setItem(KEYS.nextBudgetId, nextBudgetId.toString()),
+    ]);
+  } catch (e) {
+    console.error('persistNow error:', e);
+  }
 }
 
 export async function initializeDatabase(): Promise<void> {
