@@ -3,8 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../context/ThemeContext';
-import { FontFamily, Spacing, Shadows } from '../constants/theme';
-
+import { FontFamily } from '../constants/theme';
 
 const TAB_CONFIG: Record<string, {
     activeIcon: keyof typeof Ionicons.glyphMap;
@@ -18,11 +17,25 @@ const TAB_CONFIG: Record<string, {
 };
 
 export default function CustomTabBar({ state, descriptors, navigation }: any) {
-    const { colors } = useTheme();
+    const { colors, isDark } = useTheme();
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.background, borderColor: colors.border }]}>
-            <View style={[styles.tabBar, { backgroundColor: colors.surfaceHighlight }, Shadows.md]}>
+        <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+            <View style={[
+                styles.tabBar,
+                {
+                    backgroundColor: isDark ? '#1C1C1E' : colors.surfaceHighlight,
+                    borderColor: isDark ? '#3A3A3C' : colors.border,
+                    borderWidth: isDark ? 1 : 0,
+                    // Android shadow
+                    elevation: 12,
+                    // iOS shadow
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: -4 },
+                    shadowOpacity: isDark ? 0.4 : 0.12,
+                    shadowRadius: 12,
+                },
+            ]}>
                 {state.routes.map((route: any, index: number) => {
                     const isFocused = state.index === index;
                     const config = TAB_CONFIG[route.name] || { activeIcon: 'help', inactiveIcon: 'help-outline', label: route.name };
@@ -48,7 +61,12 @@ export default function CustomTabBar({ state, descriptors, navigation }: any) {
                             style={styles.tabItem}
                             activeOpacity={0.7}
                         >
-                            <View style={[styles.iconWrapper, isFocused && { backgroundColor: colors.primary + '15' }]}>
+                            <View style={[
+                                styles.iconWrapper,
+                                isFocused && {
+                                    backgroundColor: colors.primary + '20',
+                                },
+                            ]}>
                                 <Ionicons
                                     name={isFocused ? config.activeIcon : config.inactiveIcon}
                                     size={22}
@@ -76,14 +94,18 @@ export default function CustomTabBar({ state, descriptors, navigation }: any) {
 
 const styles = StyleSheet.create({
     container: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
         paddingHorizontal: 16,
-        paddingBottom: Platform.OS === 'ios' ? 28 : 12,
-        paddingTop: 4,
+        paddingBottom: Platform.OS === 'ios' ? 28 : 32,
+        paddingTop: 6,
     },
     tabBar: {
         flexDirection: 'row',
-        borderRadius: 24,
-        paddingVertical: 6,
+        borderRadius: 28,
+        paddingVertical: 8,
         paddingHorizontal: 8,
     },
     tabItem: {
@@ -93,9 +115,9 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
     },
     iconWrapper: {
-        width: 44,
-        height: 32,
-        borderRadius: 16,
+        width: 48,
+        height: 34,
+        borderRadius: 17,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 2,

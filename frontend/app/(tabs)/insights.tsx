@@ -216,9 +216,9 @@ export default function InsightsScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { paddingHorizontal: Spacing.xl, paddingTop: Spacing.xl, paddingBottom: Spacing.sm },
+  header: { paddingHorizontal: Spacing.xl, paddingTop: Platform.OS === 'android' ? Spacing.xxxl + 8 : Spacing.xl, paddingBottom: Spacing.sm },
   title: { fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
-  scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 100 },
+  scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 120 },
   monthSelector: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.md, gap: Spacing.xl },
   monthText: { fontSize: FontSize.lg, fontFamily: FontFamily.bold, fontWeight: '700' },
   summaryCard: { borderRadius: Radius.lg, padding: Spacing.xl, marginBottom: Spacing.lg },

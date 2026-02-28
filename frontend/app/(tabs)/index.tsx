@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -87,7 +87,7 @@ export default function HomeScreen() {
           <Text style={[styles.appTitle, { color: colors.primary }]}>SmartSpend</Text>
           <Text style={[styles.monthText, { color: colors.textSecondary }]}>{formatMonthYear(new Date())}</Text>
         </View>
-        <TouchableOpacity testID="header-settings-btn" onPress={() => router.push('/settings')} style={[styles.settingsBtn, { backgroundColor: colors.surface }]}>
+        <TouchableOpacity testID="header-settings-btn" onPress={() => router.push('/settings')} style={[styles.settingsBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Ionicons name="settings-outline" size={22} color={colors.text} />
         </TouchableOpacity>
       </View>
@@ -169,26 +169,26 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.xl, paddingTop: Spacing.xl, paddingBottom: Spacing.sm },
-  appTitle: { fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
-  monthText: { fontSize: FontSize.sm, fontFamily: FontFamily.medium, marginTop: 2 },
-  settingsBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 100 },
-  summaryCard: { borderRadius: Radius.lg, padding: Spacing.xl, marginTop: Spacing.md },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.xl, paddingTop: Platform.OS === 'android' ? Spacing.xxxl + 8 : Spacing.xl, paddingBottom: Spacing.md },
+  appTitle: { fontSize: FontSize.xxl + 4, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
+  monthText: { fontSize: FontSize.sm, fontFamily: FontFamily.medium, marginTop: 4 },
+  settingsBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 120 },
+  summaryCard: { borderRadius: Radius.xl, padding: Spacing.xl + 4, marginTop: Spacing.md },
   summaryRow: { flexDirection: 'row', alignItems: 'center' },
   summaryItem: { flex: 1, alignItems: 'center' },
-  summaryLabel: { color: 'rgba(255,255,255,0.7)', fontSize: FontSize.sm, fontFamily: FontFamily.medium, fontWeight: '500' },
-  summaryAmount: { color: '#FFF', fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', marginTop: 4 },
-  summaryDivider: { width: 1, height: 40 },
-  section: { marginTop: Spacing.xxl },
+  summaryLabel: { color: 'rgba(255,255,255,0.75)', fontSize: FontSize.sm, fontFamily: FontFamily.medium, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
+  summaryAmount: { color: '#FFF', fontSize: FontSize.xxl + 2, fontFamily: FontFamily.extraBold, fontWeight: '800', marginTop: 6 },
+  summaryDivider: { width: 1, height: 44 },
+  section: { marginTop: Spacing.xl + 4 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
   sectionTitle: { fontSize: FontSize.lg, fontFamily: FontFamily.bold, fontWeight: '700', marginBottom: Spacing.sm },
   viewAllText: { fontSize: FontSize.sm, fontFamily: FontFamily.semiBold, fontWeight: '600' },
-  budgetChip: { width: 120, padding: Spacing.md, borderRadius: Radius.md, marginRight: Spacing.sm, borderWidth: 0.5 },
+  budgetChip: { width: 120, padding: Spacing.md, borderRadius: Radius.md, marginRight: Spacing.sm, borderWidth: 1 },
   budgetEmoji: { fontSize: 20 },
   budgetName: { fontSize: FontSize.xs, fontFamily: FontFamily.semiBold, fontWeight: '600', marginTop: 4 },
   budgetBar: { height: 4, borderRadius: 2, marginTop: 6, overflow: 'hidden' },
   budgetFill: { height: '100%', borderRadius: 2 },
   budgetPct: { fontSize: FontSize.xs, fontFamily: FontFamily.bold, fontWeight: '700', marginTop: 4 },
-  fab: { position: 'absolute', bottom: 90, right: 20, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  fab: { position: 'absolute', bottom: 100, right: 20, width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
 });

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, SafeAreaView, SectionList,
+  View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, SafeAreaView, SectionList, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
@@ -163,7 +163,7 @@ export default function HistoryScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { paddingHorizontal: Spacing.xl, paddingTop: Spacing.xl, paddingBottom: Spacing.sm },
+  header: { paddingHorizontal: Spacing.xl, paddingTop: Platform.OS === 'android' ? Spacing.xxxl + 8 : Spacing.xl, paddingBottom: Spacing.sm },
   title: { fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
   searchBar: { flexDirection: 'row', alignItems: 'center', marginHorizontal: Spacing.lg, paddingHorizontal: Spacing.md, height: 44, borderRadius: Radius.md, borderWidth: 1 },
   searchInput: { flex: 1, marginLeft: Spacing.sm, fontSize: FontSize.base, fontFamily: FontFamily.regular, height: '100%' },
@@ -176,6 +176,6 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: FontSize.sm, fontFamily: FontFamily.bold, fontWeight: '700' },
   sectionTotal: { fontSize: FontSize.sm, fontFamily: FontFamily.semiBold, fontWeight: '600' },
   itemContainer: { paddingHorizontal: Spacing.lg },
-  listContent: { paddingBottom: 100 },
+  listContent: { paddingBottom: 120 },
   fab: { position: 'absolute', bottom: 90, right: 20, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
 });

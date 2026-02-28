@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert, TextInput, Modal, Share } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert, TextInput, Modal, Share, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../src/context/ThemeContext';
@@ -122,9 +122,9 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { paddingHorizontal: Spacing.xl, paddingTop: Spacing.xl, paddingBottom: Spacing.sm },
+  header: { paddingHorizontal: Spacing.xl, paddingTop: Platform.OS === 'android' ? Spacing.xxxl + 8 : Spacing.xl, paddingBottom: Spacing.sm },
   title: { fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
-  scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 100 },
+  scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 120 },
   sectionTitle: { fontSize: FontSize.xs, fontFamily: FontFamily.bold, fontWeight: '700', letterSpacing: 1, marginTop: Spacing.xl, marginBottom: Spacing.sm, paddingHorizontal: Spacing.xs },
   card: { borderRadius: Radius.lg, padding: Spacing.lg },
   cardLabel: { fontSize: FontSize.base, fontFamily: FontFamily.semiBold, fontWeight: '600', marginBottom: Spacing.sm },
