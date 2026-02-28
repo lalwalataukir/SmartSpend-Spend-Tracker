@@ -19,6 +19,9 @@ config.cacheStores = [
 // // Alternative: use a more aggressive exclusion pattern
 // config.resolver.blacklistRE = /node_modules\/.*\/(android|ios|windows|macos|__tests__|\.git|.*\.android\.js|.*\.ios\.js)$/;
 
+// Enable WASM support for expo-sqlite web
+config.resolver.assetExts.push('wasm');
+
 // Reduce the number of workers to decrease resource usage
 config.maxWorkers = 2;
 
