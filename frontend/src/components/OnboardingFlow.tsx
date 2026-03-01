@@ -5,6 +5,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useTheme } from '../context/ThemeContext';
 import { Spacing, FontSize, Radius, FontFamily } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
@@ -17,7 +18,9 @@ interface Slide {
     id: string;
     icon: keyof typeof Ionicons.glyphMap;
     iconColor: string;
+    iconColorDark: string;
     bgColors: [string, string];
+    bgColorsDark: [string, string];
     title: string;
     subtitle: string;
 }
@@ -27,7 +30,9 @@ const slides: Slide[] = [
         id: '1',
         icon: 'wallet',
         iconColor: '#4F46E5',
+        iconColorDark: '#818CF8',
         bgColors: ['#EEF2FF', '#E0E7FF'],
+        bgColorsDark: ['#1E1B4B', '#2E2670'],
         title: 'Track Every Spend',
         subtitle: 'Log expenses in under 10 seconds with our quick-add numpad. No clutter, no distractions.',
     },
@@ -35,7 +40,9 @@ const slides: Slide[] = [
         id: '2',
         icon: 'bar-chart',
         iconColor: '#7C3AED',
+        iconColorDark: '#A78BFA',
         bgColors: ['#F5F3FF', '#EDE9FE'],
+        bgColorsDark: ['#2E1065', '#3B1F8A'],
         title: 'Visualize Your Habits',
         subtitle: 'See where your money goes with beautiful charts, daily breakdowns, and category insights.',
     },
@@ -43,7 +50,9 @@ const slides: Slide[] = [
         id: '3',
         icon: 'shield-checkmark',
         iconColor: '#059669',
+        iconColorDark: '#34D399',
         bgColors: ['#ECFDF5', '#D1FAE5'],
+        bgColorsDark: ['#064E3B', '#065F46'],
         title: 'Stay on Budget',
         subtitle: 'Set budgets per category and get smart nudges when you\'re overspending. All data stays on your device.',
     },
@@ -52,6 +61,7 @@ const slides: Slide[] = [
 export default function OnboardingFlow({ onComplete }: OnboardingProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const flatListRef = useRef<FlatList>(null);
+    const { colors, isDark } = useTheme();
 
     const goToNext = () => {
         if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -69,19 +79,23 @@ export default function OnboardingFlow({ onComplete }: OnboardingProps) {
         onComplete();
     };
 
-    const renderSlide = ({ item }: { item: Slide }) => (
-        <View style={styles.slide}>
-            <View style={[styles.iconArea, { backgroundColor: item.bgColors[0] }]}>
-                <View style={[styles.iconRingOuter, { backgroundColor: item.bgColors[1] }]}>
-                    <View style={[styles.iconRingInner, { backgroundColor: item.iconColor + '20' }]}>
-                        <Ionicons name={item.icon} size={48} color={item.iconColor} />
+    const renderSlide = ({ item }: { item: Slide }) => {
+        const slideIconColor = isDark ? item.iconColorDark : item.iconColor;
+        const slideBgColors = isDark ? item.bgColorsDark : item.bgColors;
+        return (
+            <View style={styles.slide}>
+                <View style={[styles.iconArea, { backgroundColor: slideBgColors[0] }]}>
+                    <View style={[styles.iconRingOuter, { backgroundColor: slideBgColors[1] }]}>
+                        <View style={[styles.iconRingInner, { backgroundColor: slideIconColor + '20' }]}>
+                            <Ionicons name={item.icon} size={48} color={slideIconColor} />
+                        </View>
                     </View>
                 </View>
+                <Text style={[styles.slideTitle, { color: colors.text }]}>{item.title}</Text>
+                <Text style={[styles.slideSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
             </View>
-            <Text style={styles.slideTitle}>{item.title}</Text>
-            <Text style={styles.slideSubtitle}>{item.subtitle}</Text>
-        </View>
-    );
+        );
+    };
 
     const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
         if (viewableItems.length > 0) {
@@ -90,11 +104,11 @@ export default function OnboardingFlow({ onComplete }: OnboardingProps) {
     }).current;
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.topBar}>
                 <View />
                 <TouchableOpacity onPress={handleSkip} style={styles.skipBtn}>
-                    <Text style={styles.skipText}>Skip</Text>
+                    <Text style={[styles.skipText, { color: colors.textSecondary }]}>Skip</Text>
                 </TouchableOpacity>
             </View>
 
@@ -118,8 +132,8 @@ export default function OnboardingFlow({ onComplete }: OnboardingProps) {
                             style={[
                                 styles.dot,
                                 i === currentIndex
-                                    ? { backgroundColor: '#4F46E5', width: 24 }
-                                    : { backgroundColor: '#D1D5DB', width: 8 },
+                                    ? { backgroundColor: colors.primary, width: 24 }
+                                    : { backgroundColor: colors.border, width: 8 },
                             ]}
                         />
                     ))}
@@ -127,7 +141,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingProps) {
 
                 <TouchableOpacity onPress={goToNext} activeOpacity={0.8}>
                     <LinearGradient
-                        colors={['#4F46E5', '#7C3AED']}
+                        colors={[colors.gradientStart, colors.gradientEnd]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.nextBtn}
@@ -150,7 +164,6 @@ export default function OnboardingFlow({ onComplete }: OnboardingProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFF',
     },
     topBar: {
         flexDirection: 'row',
@@ -167,7 +180,6 @@ const styles = StyleSheet.create({
     skipText: {
         fontSize: FontSize.base,
         fontFamily: FontFamily.medium,
-        color: '#6B7280',
     },
     slide: {
         width,
@@ -201,14 +213,12 @@ const styles = StyleSheet.create({
         fontSize: FontSize.xxl + 4,
         fontFamily: FontFamily.extraBold,
         fontWeight: '800',
-        color: '#111827',
         textAlign: 'center',
         marginBottom: Spacing.md,
     },
     slideSubtitle: {
         fontSize: FontSize.base,
         fontFamily: FontFamily.regular,
-        color: '#6B7280',
         textAlign: 'center',
         lineHeight: 24,
         paddingHorizontal: Spacing.lg,
@@ -232,11 +242,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: Spacing.xxxl,
-        paddingVertical: Spacing.md + 4,
-        borderRadius: Radius.full,
+        paddingHorizontal: Spacing.xxxl + 8,
+        paddingVertical: Spacing.md + 6,
+        borderRadius: 20,
         gap: Spacing.sm,
-        minWidth: 180,
+        minWidth: 200,
     },
     nextBtnText: {
         color: '#FFF',

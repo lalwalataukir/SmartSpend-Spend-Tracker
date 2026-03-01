@@ -16,7 +16,7 @@ SmartSpend/
 │   │   ├── components/ # Reusable UI components
 │   │   ├── constants/  # Categories, colors, theme
 │   │   ├── context/    # ThemeContext
-│   │   ├── db/         # SQLite database layer (expo-sqlite)
+│   │   ├── db/         # AsyncStorage database layer
 │   │   └── utils/      # CSV export, date helpers
 │   ├── metro.config.js # Metro bundler configuration
 │   ├── app.json        # Expo config (web bundler: metro, output: static)
@@ -31,11 +31,12 @@ SmartSpend/
 
 - **Framework**: React Native (Expo 54) with expo-router
 - **Web**: Metro bundler (static output)
-- **Local Storage**: expo-sqlite + AsyncStorage
+- **Local Storage**: AsyncStorage (in-memory cache with debounced persistence)
 - **Navigation**: React Navigation (custom floating tab bar)
 - **Charts**: react-native-svg (DonutChart)
 - **Animations**: react-native-reanimated
 - **Typography**: Inter (Google Fonts via expo-font)
+- **Safe Areas**: react-native-safe-area-context (useSafeAreaInsets)
 
 ## Running the App
 
@@ -61,8 +62,34 @@ Configured as static site:
 - Build: `cd frontend && npx expo export --platform web --output-dir dist`
 - Public dir: `frontend/dist`
 
+## Design System
+
+- **Primary Color**: Indigo (#4F46E5)
+- **Currency**: Indian Rupees (₹)
+- **Corner Radii**: Modern squircle shapes (14-18px), not pill shapes
+- **Typography**: FontFamily constants from `theme.ts` (Inter font family)
+- **Spacing/Radius/FontSize/Shadows**: All in `frontend/src/constants/theme.ts`
+- **Dark Mode**: Full dark mode support via ThemeContext; all components use `colors.*` from theme
+- **Safe Areas**: All screens use `useSafeAreaInsets()` for proper device notch/gesture bar spacing
+
+## Completed Improvements (Audit)
+
+1. **Dark mode fixes**: OnboardingFlow, AnimatedToggle, TransactionItem all use theme colors
+2. **Typography/radius consistency**: FontFamily constants on all screens, standardized radii
+3. **Save confirmation**: Snackbar feedback on transaction add/edit in Home and History
+4. **Date picker**: Users can backdate transactions with day-by-day navigation
+5. **Expanded search**: Search matches category names and amounts, not just notes
+6. **Orphan warning**: Category deletion warns about associated transactions
+7. **deleteAllData fix**: Uses `persistNow()` for reliable deletion; CSV export has web fallback via Blob download
+8. **Chart improvements**: Donut legend shows all categories (expandable), bar chart readable for full months
+9. **Sheet scroll fix**: Dynamic sizing for AddTransactionSheet content area
+10. **Safe area insets**: All screens and tab bar use `useSafeAreaInsets()` for proper framing
+11. **Modern button design**: Squircle shapes (borderRadius 14-18) replace dated pill shapes
+
 ## Notes
 
 - The app is fully offline-first; the backend is a separate scaffold not connected to the frontend
 - The backend requires MongoDB (`MONGO_URL`, `DB_NAME` env vars) which are not set up in this Replit
-- All data is stored locally via expo-sqlite on device
+- All data is stored locally via AsyncStorage
+- Recurring transactions have a flag but no auto-fire scheduler (cosmetic feature)
+- Budget alerts show visual indicators but don't send push notifications

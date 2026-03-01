@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { FontFamily } from '../constants/theme';
 
@@ -18,9 +19,10 @@ const TAB_CONFIG: Record<string, {
 
 export default function CustomTabBar({ state, descriptors, navigation }: any) {
     const { colors, isDark } = useTheme();
+    const insets = useSafeAreaInsets();
 
     return (
-        <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+        <View style={[styles.container, { backgroundColor: 'transparent', paddingBottom: Math.max(insets.bottom, 12) }]}>
             <View style={[
                 styles.tabBar,
                 {
@@ -99,7 +101,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         paddingHorizontal: 16,
-        paddingBottom: Platform.OS === 'ios' ? 28 : 32,
+        paddingBottom: 12,
         paddingTop: 6,
     },
     tabBar: {

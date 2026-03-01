@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, PanResponder, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, PanResponder, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../../src/context/ThemeContext';
 import { Spacing, FontSize, Radius, Shadows, FontFamily } from '../../src/constants/theme';
@@ -15,12 +16,14 @@ import EmptyState from '../../src/components/EmptyState';
 
 export default function InsightsScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthTotal, setMonthTotal] = useState(0);
   const [lastMonthTotal, setLastMonthTotal] = useState(0);
   const [dailyAvg, setDailyAvg] = useState(0);
   const [categorySpending, setCategorySpending] = useState<Array<{ categoryId: number; total: number; categoryName: string; categoryEmoji: string; categoryColor: string }>>([]);
   const [dailySpending, setDailySpending] = useState<Array<{ day: string; total: number }>>([]);
+  const [chartMode, setChartMode] = useState<'daily' | 'weekly'>('daily');
 
   const goToPrevMonth = useCallback(() => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -66,8 +69,34 @@ export default function InsightsScreen() {
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
   const monthDiff = lastMonthTotal > 0 ? ((monthTotal - lastMonthTotal) / lastMonthTotal) * 100 : 0;
-  const maxDailySpend = Math.max(...dailySpending.map(d => d.total), 1);
   const totalCategorySpend = categorySpending.reduce((sum, c) => sum + c.total, 0);
+
+  const weeklySpending = React.useMemo(() => {
+    if (dailySpending.length === 0) return [];
+    const weeks: Array<{ label: string; total: number }> = [];
+    let weekTotal = 0;
+    let weekStart = '';
+    dailySpending.forEach((d, i) => {
+      if (i % 7 === 0) {
+        if (i > 0) {
+          weeks.push({ label: weekStart, total: weekTotal });
+        }
+        weekStart = format(parseISO(d.day), 'dd MMM');
+        weekTotal = 0;
+      }
+      weekTotal += d.total;
+    });
+    if (weekStart) {
+      weeks.push({ label: weekStart, total: weekTotal });
+    }
+    return weeks;
+  }, [dailySpending]);
+
+  const showWeeklyOption = dailySpending.length >= 28;
+  const barData = chartMode === 'weekly' && showWeeklyOption
+    ? weeklySpending.map(w => ({ key: w.label, total: w.total, label: w.label }))
+    : dailySpending.map(d => ({ key: d.day, total: d.total, label: format(parseISO(d.day), 'd') }));
+  const maxBarSpend = Math.max(...barData.map(d => d.total), 1);
 
   // Build nudges with metadata for styling
   const nudges: Array<{ text: string; icon: string; type: 'positive' | 'negative' | 'neutral' }> = [];
@@ -111,8 +140,8 @@ export default function InsightsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} testID="insights-screen">
-      <View style={styles.header}><Text style={[styles.title, { color: colors.text }]}>Insights</Text></View>
+    <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: insets.top }]} testID="insights-screen">
+      <View style={[styles.header, Platform.OS === 'android' && { paddingTop: Math.max(insets.top, Spacing.lg) + Spacing.sm }]}><Text style={[styles.title, { color: colors.text }]}>Insights</Text></View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.monthSelector} {...panResponder.panHandlers}>
           <TouchableOpacity testID="prev-month-btn" onPress={goToPrevMonth}><Ionicons name="chevron-back" size={24} color={colors.primary} /></TouchableOpacity>
@@ -165,7 +194,27 @@ export default function InsightsScreen() {
 
         {/* Daily Spending Bar Chart */}
         <View style={[styles.card, { backgroundColor: colors.surface }, Shadows.sm]}>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>Daily Spending</Text>
+          <View style={styles.chartHeader}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>
+              {chartMode === 'weekly' && showWeeklyOption ? 'Weekly Spending' : 'Daily Spending'}
+            </Text>
+            {showWeeklyOption && (
+              <View style={[styles.chartToggle, { backgroundColor: colors.border + '40' }]}>
+                <TouchableOpacity
+                  onPress={() => setChartMode('daily')}
+                  style={[styles.chartToggleBtn, chartMode === 'daily' && { backgroundColor: colors.primary }]}
+                >
+                  <Text style={[styles.chartToggleText, { color: chartMode === 'daily' ? '#FFF' : colors.textSecondary }]}>Day</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setChartMode('weekly')}
+                  style={[styles.chartToggleBtn, chartMode === 'weekly' && { backgroundColor: colors.primary }]}
+                >
+                  <Text style={[styles.chartToggleText, { color: chartMode === 'weekly' ? '#FFF' : colors.textSecondary }]}>Week</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
           {dailySpending.length === 0 ? (
             <EmptyState
               icon="stats-chart-outline"
@@ -175,15 +224,15 @@ export default function InsightsScreen() {
           ) : (
             <View style={styles.dailyChart}>
               <View style={styles.dailyBars}>
-                {dailySpending.map((d) => (
-                  <View key={d.day} style={styles.dailyBarWrapper}>
+                {barData.map((d) => (
+                  <View key={d.key} style={styles.dailyBarWrapper}>
                     <View style={[styles.dailyBarTrack, { backgroundColor: colors.border }]}>
                       <LinearGradient
                         colors={[colors.gradientStart, colors.gradientEnd]}
-                        style={[styles.dailyBarFill, { height: `${(d.total / maxDailySpend) * 100}%` }]}
+                        style={[styles.dailyBarFill, { height: `${(d.total / maxBarSpend) * 100}%` }]}
                       />
                     </View>
-                    <Text style={[styles.dailyLabel, { color: colors.textSecondary }]}>{format(parseISO(d.day), 'd')}</Text>
+                    <Text style={[styles.dailyLabel, { color: colors.textSecondary }]}>{d.label}</Text>
                   </View>
                 ))}
               </View>
@@ -210,18 +259,18 @@ export default function InsightsScreen() {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { paddingHorizontal: Spacing.xl, paddingTop: Platform.OS === 'android' ? Spacing.xxxl + 8 : Spacing.xl, paddingBottom: Spacing.sm },
+  header: { paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, paddingBottom: Spacing.sm },
   title: { fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
   scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 120 },
   monthSelector: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.md, gap: Spacing.xl },
   monthText: { fontSize: FontSize.lg, fontFamily: FontFamily.bold, fontWeight: '700' },
-  summaryCard: { borderRadius: Radius.lg, padding: Spacing.xl, marginBottom: Spacing.lg },
+  summaryCard: { borderRadius: Radius.xl, padding: Spacing.xl, marginBottom: Spacing.lg },
   summaryLabel: { fontSize: FontSize.sm, fontFamily: FontFamily.medium, color: 'rgba(255,255,255,0.7)' },
   summaryAmount: { fontSize: FontSize.xxxl, fontFamily: FontFamily.extraBold, fontWeight: '800', marginTop: 4, color: '#FFF' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.md },
@@ -230,6 +279,10 @@ const styles = StyleSheet.create({
   avgText: { fontSize: FontSize.sm, fontFamily: FontFamily.regular, color: 'rgba(255,255,255,0.7)' },
   card: { borderRadius: Radius.lg, padding: Spacing.lg, marginBottom: Spacing.lg },
   cardTitle: { fontSize: FontSize.lg, fontFamily: FontFamily.bold, fontWeight: '700' },
+  chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  chartToggle: { flexDirection: 'row', borderRadius: Radius.sm, padding: 2 },
+  chartToggleBtn: { paddingHorizontal: Spacing.sm, paddingVertical: 4, borderRadius: Radius.sm - 1 },
+  chartToggleText: { fontSize: FontSize.xs, fontFamily: FontFamily.semiBold, fontWeight: '600' },
   dailyChart: { paddingTop: Spacing.sm },
   dailyBars: { flexDirection: 'row', alignItems: 'flex-end', height: 140, gap: 2 },
   dailyBarWrapper: { flex: 1, alignItems: 'center', height: '100%', justifyContent: 'flex-end' },

@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, SafeAreaView, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Modal, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../src/context/ThemeContext';
-import { Spacing, FontSize, Radius } from '../src/constants/theme';
-import { getAllCategories, insertCategory, updateCategory, deleteCategory, type Category } from '../src/db/database';
+import { Spacing, FontSize, Radius, FontFamily } from '../src/constants/theme';
+import { getAllCategories, insertCategory, updateCategory, deleteCategory, getTransactionCountForCategory, type Category } from '../src/db/database';
 
 const PRESET_COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A29BFE', '#55EFC4', '#FDCB6E', '#74B9FF', '#E17055'];
 const COMMON_EMOJIS = ['🍔', '🚗', '🛍️', '🎭', '💊', '🛒', '🏠', '📚', '✈️', '📱', '💅', '📦', '🎮', '☕', '🎵', '💼', '🐶', '🎁', '⚽', '🔧'];
@@ -12,6 +13,7 @@ const COMMON_EMOJIS = ['🍔', '🚗', '🛍️', '🎭', '💊', '🛒', '🏠'
 export default function ManageCategoriesScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -34,15 +36,20 @@ export default function ManageCategoriesScreen() {
 
   const handleDelete = (cat: Category) => {
     if (cat.isDefault) { Alert.alert('Cannot Delete', 'Default categories cannot be deleted.'); return; }
-    Alert.alert('Delete Category', `Delete "${cat.name}"?`, [
+    const transactionCount = getTransactionCountForCategory(cat.id);
+    let message = `Delete "${cat.name}"?`;
+    if (transactionCount > 0) {
+      message += `\n\nThis category has ${transactionCount} transaction${transactionCount === 1 ? '' : 's'}. ${transactionCount === 1 ? 'It will' : 'They will'} show as 'Unknown'.`;
+    }
+    Alert.alert('Delete Category', message, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: () => { deleteCategory(cat.id); loadData(); } },
     ]);
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} testID="manage-categories-screen">
-      <View style={styles.header}>
+    <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: insets.top }]} testID="manage-categories-screen">
+      <View style={[styles.header, Platform.OS === 'android' && { paddingTop: Math.max(insets.top, Spacing.lg) + Spacing.sm }]}>
         <TouchableOpacity testID="back-btn" onPress={() => router.back()} style={styles.backBtn}><Ionicons name="arrow-back" size={24} color={colors.text} /></TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>Manage Categories</Text>
         <TouchableOpacity testID="add-category-btn" onPress={openAdd} style={[styles.addBtn, { backgroundColor: colors.primary }]}><Ionicons name="add" size={22} color="#FFF" /></TouchableOpacity>
@@ -81,7 +88,7 @@ export default function ManageCategoriesScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -89,21 +96,21 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.md },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  title: { flex: 1, fontSize: FontSize.xl, fontWeight: '800', marginLeft: Spacing.sm },
-  addBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  title: { flex: 1, fontSize: FontSize.xl, fontFamily: FontFamily.extraBold, fontWeight: '800', marginLeft: Spacing.sm },
+  addBtn: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 40 },
-  catRow: { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, borderRadius: Radius.md, marginBottom: Spacing.sm, borderWidth: 0.5 },
+  catRow: { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, borderRadius: Radius.lg, marginBottom: Spacing.sm, borderWidth: 0.5 },
   catIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   catEmoji: { fontSize: 20 },
   catInfo: { flex: 1, marginLeft: Spacing.md },
-  catName: { fontSize: FontSize.base, fontWeight: '600' },
-  catBadge: { fontSize: FontSize.xs, marginTop: 2 },
+  catName: { fontSize: FontSize.base, fontFamily: FontFamily.semiBold, fontWeight: '600' },
+  catBadge: { fontSize: FontSize.xs, fontFamily: FontFamily.regular, marginTop: 2 },
   actionBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   modal: { width: '100%', borderRadius: Radius.lg, padding: Spacing.xl },
-  modalTitle: { fontSize: FontSize.xl, fontWeight: '800', marginBottom: Spacing.lg },
+  modalTitle: { fontSize: FontSize.xl, fontFamily: FontFamily.extraBold, fontWeight: '800', marginBottom: Spacing.lg },
   input: { height: 48, borderRadius: Radius.md, borderWidth: 1, paddingHorizontal: Spacing.lg, fontSize: FontSize.base },
-  label: { fontSize: FontSize.sm, fontWeight: '600', marginTop: Spacing.md, marginBottom: Spacing.sm },
+  label: { fontSize: FontSize.sm, fontFamily: FontFamily.semiBold, fontWeight: '600', marginTop: Spacing.md, marginBottom: Spacing.sm },
   emojiRow: { maxHeight: 48 },
   emojiBtn: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.sm, borderWidth: 1.5, borderColor: 'transparent' },
   emojiText: { fontSize: 20 },
@@ -111,6 +118,6 @@ const styles = StyleSheet.create({
   colorBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'transparent' },
   colorBtnSelected: { borderColor: '#000', borderWidth: 3 },
   modalActions: { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.xl },
-  modalBtn: { flex: 1, height: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
-  modalBtnText: { fontSize: FontSize.base, fontWeight: '700' },
+  modalBtn: { flex: 1, height: 52, borderRadius: Radius.lg, alignItems: 'center', justifyContent: 'center' },
+  modalBtnText: { fontSize: FontSize.base, fontFamily: FontFamily.bold, fontWeight: '700' },
 });

@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Platform,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/context/ThemeContext';
 import { Spacing, FontSize, Radius, Shadows, FontFamily } from '../../src/constants/theme';
 import {
@@ -21,12 +22,14 @@ import EmptyState from '../../src/components/EmptyState';
 export default function HomeScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [todayTotal, setTodayTotal] = useState(0);
   const [monthTotal, setMonthTotal] = useState(0);
   const [recentTransactions, setRecentTransactions] = useState<TransactionWithCategory[]>([]);
   const [budgetHealth, setBudgetHealth] = useState<Array<{ category: Category; spent: number; limit: number }>>([]);
   const [showAddSheet, setShowAddSheet] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<TransactionWithCategory | null>(null);
   const [snackbar, setSnackbar] = useState<{ visible: boolean; message: string; undoData?: any }>({
     visible: false, message: '',
   });
@@ -81,8 +84,8 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} testID="home-screen">
-      <View style={styles.header}>
+    <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: insets.top }]} testID="home-screen">
+      <View style={[styles.header, Platform.OS === 'android' && { paddingTop: Math.max(insets.top, Spacing.lg) + Spacing.sm }]}>
         <View>
           <Text style={[styles.appTitle, { color: colors.primary }]}>SmartSpend</Text>
           <Text style={[styles.monthText, { color: colors.textSecondary }]}>{formatMonthYear(new Date())}</Text>
@@ -161,18 +164,18 @@ export default function HomeScreen() {
         <Ionicons name="add" size={28} color="#FFF" />
       </TouchableOpacity>
 
-      <AddTransactionSheet visible={showAddSheet} onClose={() => setShowAddSheet(false)} onSaved={() => loadData()} />
+      <AddTransactionSheet visible={showAddSheet} onClose={() => { setShowAddSheet(false); setEditingTransaction(null); }} onSaved={() => { loadData(); setSnackbar({ visible: true, message: editingTransaction ? 'Transaction updated!' : 'Transaction saved!' }); setEditingTransaction(null); }} />
       <Snackbar visible={snackbar.visible} message={snackbar.message} actionLabel="Undo" onAction={handleUndo} onDismiss={() => setSnackbar({ visible: false, message: '' })} />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.xl, paddingTop: Platform.OS === 'android' ? Spacing.xxxl + 8 : Spacing.xl, paddingBottom: Spacing.md },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, paddingBottom: Spacing.md },
   appTitle: { fontSize: FontSize.xxl + 4, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
   monthText: { fontSize: FontSize.sm, fontFamily: FontFamily.medium, marginTop: 4 },
-  settingsBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  settingsBtn: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
   scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 120 },
   summaryCard: { borderRadius: Radius.xl, padding: Spacing.xl + 4, marginTop: Spacing.md },
   summaryRow: { flexDirection: 'row', alignItems: 'center' },
@@ -190,5 +193,5 @@ const styles = StyleSheet.create({
   budgetBar: { height: 4, borderRadius: 2, marginTop: 6, overflow: 'hidden' },
   budgetFill: { height: '100%', borderRadius: 2 },
   budgetPct: { fontSize: FontSize.xs, fontFamily: FontFamily.bold, fontWeight: '700', marginTop: 4 },
-  fab: { position: 'absolute', bottom: 100, right: 20, width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
+  fab: { position: 'absolute', bottom: 100, right: 20, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
 });

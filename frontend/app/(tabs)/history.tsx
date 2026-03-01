@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, SafeAreaView, SectionList, Platform,
+  View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, SectionList, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/context/ThemeContext';
 import { Spacing, FontSize, Radius, Shadows, FontFamily } from '../../src/constants/theme';
 import {
@@ -28,6 +29,7 @@ interface GroupedTransactions {
 
 export default function HistoryScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -101,8 +103,8 @@ export default function HistoryScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} testID="history-screen">
-      <View style={styles.header}><Text style={[styles.title, { color: colors.text }]}>History</Text></View>
+    <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: insets.top }]} testID="history-screen">
+      <View style={[styles.header, Platform.OS === 'android' && { paddingTop: Math.max(insets.top, Spacing.lg) + Spacing.sm }]}><Text style={[styles.title, { color: colors.text }]}>History</Text></View>
 
       <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Ionicons name="search" size={20} color={colors.textSecondary} />
@@ -113,7 +115,7 @@ export default function HistoryScreen() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterContent}>
         {filters.map(f => (
           <TouchableOpacity key={f.key} testID={`filter-${f.key}`} onPress={() => { setActiveFilter(f.key); setSelectedCategoryId(null); }}
-            style={[styles.filterChip, { borderColor: activeFilter === f.key ? colors.primary : colors.border }, activeFilter === f.key && { backgroundColor: colors.primary + '15' }]}>
+            style={[styles.filterChip, { backgroundColor: activeFilter === f.key ? colors.primary + '18' : colors.surface }]}>
             <Text style={[styles.filterText, { color: activeFilter === f.key ? colors.primary : colors.text }]}>{f.label}</Text>
           </TouchableOpacity>
         ))}
@@ -123,7 +125,7 @@ export default function HistoryScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterContent}>
           {categories.map(cat => (
             <TouchableOpacity key={cat.id} testID={`cat-filter-${cat.id}`} onPress={() => setSelectedCategoryId(cat.id)}
-              style={[styles.filterChip, { borderColor: selectedCategoryId === cat.id ? colors.primary : colors.border }, selectedCategoryId === cat.id && { backgroundColor: colors.primary + '15' }]}>
+              style={[styles.filterChip, { backgroundColor: selectedCategoryId === cat.id ? colors.primary + '18' : colors.surface }]}>
               <Text style={styles.filterEmoji}>{cat.emoji}</Text>
               <Text style={[styles.filterText, { color: selectedCategoryId === cat.id ? colors.primary : colors.text }]}>{cat.name}</Text>
             </TouchableOpacity>
@@ -155,21 +157,21 @@ export default function HistoryScreen() {
       <TouchableOpacity testID="fab-add-history" style={[styles.fab, { backgroundColor: colors.primary }, Shadows.lg]} activeOpacity={0.8} onPress={() => { setEditTransaction(null); setShowAddSheet(true); }}>
         <Ionicons name="add" size={28} color="#FFF" />
       </TouchableOpacity>
-      <AddTransactionSheet visible={showAddSheet} onClose={() => { setShowAddSheet(false); setEditTransaction(null); }} onSaved={() => loadData()} editTransaction={editTransaction} />
+      <AddTransactionSheet visible={showAddSheet} onClose={() => { setShowAddSheet(false); setEditTransaction(null); }} onSaved={() => { loadData(); setSnackbar({ visible: true, message: editTransaction ? 'Transaction updated!' : 'Transaction saved!' }); setEditTransaction(null); }} editTransaction={editTransaction} />
       <Snackbar visible={snackbar.visible} message={snackbar.message} actionLabel="Undo" onAction={handleUndo} onDismiss={() => setSnackbar({ visible: false, message: '' })} />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { paddingHorizontal: Spacing.xl, paddingTop: Platform.OS === 'android' ? Spacing.xxxl + 8 : Spacing.xl, paddingBottom: Spacing.sm },
+  header: { paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, paddingBottom: Spacing.sm },
   title: { fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
   searchBar: { flexDirection: 'row', alignItems: 'center', marginHorizontal: Spacing.lg, paddingHorizontal: Spacing.md, height: 44, borderRadius: Radius.md, borderWidth: 1 },
   searchInput: { flex: 1, marginLeft: Spacing.sm, fontSize: FontSize.base, fontFamily: FontFamily.regular, height: '100%' },
   filterRow: { maxHeight: 48, marginTop: Spacing.sm },
   filterContent: { paddingHorizontal: Spacing.lg, gap: Spacing.sm },
-  filterChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.full, borderWidth: 1.5 },
+  filterChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm + 2, borderRadius: Radius.lg, borderWidth: 0 },
   filterEmoji: { fontSize: 14, marginRight: 4 },
   filterText: { fontSize: FontSize.sm, fontFamily: FontFamily.medium, fontWeight: '500' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg },
@@ -177,5 +179,5 @@ const styles = StyleSheet.create({
   sectionTotal: { fontSize: FontSize.sm, fontFamily: FontFamily.semiBold, fontWeight: '600' },
   itemContainer: { paddingHorizontal: Spacing.lg },
   listContent: { paddingBottom: 120 },
-  fab: { position: 'absolute', bottom: 90, right: 20, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  fab: { position: 'absolute', bottom: 100, right: 20, width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 });

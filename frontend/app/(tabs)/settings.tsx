@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert, TextInput, Modal, Share, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, TextInput, Modal, Share, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/context/ThemeContext';
 import { Spacing, FontSize, Radius, FontFamily } from '../../src/constants/theme';
 import { PAYMENT_METHODS } from '../../src/constants/categories';
@@ -11,6 +12,7 @@ import { formatDateForCSV, formatTimeForCSV } from '../../src/utils/format';
 export default function SettingsScreen() {
   const { colors, themeMode, setThemeMode, defaultPaymentMethod, setDefaultPaymentMethod } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
@@ -30,7 +32,21 @@ export default function SettingsScreen() {
         const catName = catMap.get(tx.categoryId) || 'Unknown';
         csv += `${formatDateForCSV(tx.date)},${formatTimeForCSV(tx.date)},${tx.amount},${catName},"${(tx.note || '').replace(/"/g, '""')}",${tx.paymentMethod},${tx.isRecurring ? 'Yes' : 'No'}\n`;
       }
-      await Share.share({ message: csv, title: `SmartSpend_Export_${new Date().toISOString().slice(0, 7)}.csv` });
+      
+      if (Platform.OS === 'web') {
+        const filename = `SmartSpend_Export_${new Date().toISOString().slice(0, 7)}.csv`;
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        await Share.share({ message: csv, title: `SmartSpend_Export_${new Date().toISOString().slice(0, 7)}.csv` });
+      }
     } catch (error) { Alert.alert('Export Error', 'Failed to export data.'); }
   };
 
@@ -54,15 +70,15 @@ export default function SettingsScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} testID="settings-screen">
-      <View style={styles.header}><Text style={[styles.title, { color: colors.text }]}>Settings</Text></View>
+    <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: insets.top }]} testID="settings-screen">
+      <View style={[styles.header, Platform.OS === 'android' && { paddingTop: Math.max(insets.top, Spacing.lg) + Spacing.sm }]}><Text style={[styles.title, { color: colors.text }]}>Settings</Text></View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>GENERAL</Text>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={[styles.cardLabel, { color: colors.text }]}>App Theme</Text>
           <View style={styles.themeRow}>
             {themeModes.map(t => (
-              <TouchableOpacity key={t.key} testID={`theme-${t.key}`} onPress={() => setThemeMode(t.key)} style={[styles.themeChip, { borderColor: themeMode === t.key ? colors.primary : colors.border }, themeMode === t.key && { backgroundColor: colors.primary + '15' }]}>
+              <TouchableOpacity key={t.key} testID={`theme-${t.key}`} onPress={() => setThemeMode(t.key)} style={[styles.themeChip, { backgroundColor: themeMode === t.key ? colors.primary + '18' : colors.surface }]}>
                 <Ionicons name={t.icon} size={18} color={themeMode === t.key ? colors.primary : colors.textSecondary} />
                 <Text style={[styles.themeText, { color: themeMode === t.key ? colors.primary : colors.text }]}>{t.label}</Text>
               </TouchableOpacity>
@@ -71,7 +87,7 @@ export default function SettingsScreen() {
           <Text style={[styles.cardLabel, { color: colors.text, marginTop: Spacing.lg }]}>Default Payment Method</Text>
           <View style={styles.themeRow}>
             {PAYMENT_METHODS.map(method => (
-              <TouchableOpacity key={method} testID={`default-payment-${method}`} onPress={() => setDefaultPaymentMethod(method)} style={[styles.themeChip, { borderColor: defaultPaymentMethod === method ? colors.primary : colors.border }, defaultPaymentMethod === method && { backgroundColor: colors.primary }]}>
+              <TouchableOpacity key={method} testID={`default-payment-${method}`} onPress={() => setDefaultPaymentMethod(method)} style={[styles.themeChip, { backgroundColor: defaultPaymentMethod === method ? colors.primary : colors.surface }]}>
                 <Text style={[styles.themeText, { color: defaultPaymentMethod === method ? '#FFF' : colors.text, fontWeight: defaultPaymentMethod === method ? '700' : '400' }]}>{method}</Text>
               </TouchableOpacity>
             ))}
@@ -116,20 +132,20 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { paddingHorizontal: Spacing.xl, paddingTop: Platform.OS === 'android' ? Spacing.xxxl + 8 : Spacing.xl, paddingBottom: Spacing.sm },
+  header: { paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, paddingBottom: Spacing.sm },
   title: { fontSize: FontSize.xxl, fontFamily: FontFamily.extraBold, fontWeight: '800', letterSpacing: -0.5 },
   scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 120 },
   sectionTitle: { fontSize: FontSize.xs, fontFamily: FontFamily.bold, fontWeight: '700', letterSpacing: 1, marginTop: Spacing.xl, marginBottom: Spacing.sm, paddingHorizontal: Spacing.xs },
   card: { borderRadius: Radius.lg, padding: Spacing.lg },
   cardLabel: { fontSize: FontSize.base, fontFamily: FontFamily.semiBold, fontWeight: '600', marginBottom: Spacing.sm },
   themeRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
-  themeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.full, borderWidth: 1.5 },
+  themeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm + 2, borderRadius: Radius.lg, borderWidth: 0 },
   themeText: { fontSize: FontSize.sm, fontFamily: FontFamily.medium },
   settingsGroup: { borderRadius: Radius.lg, overflow: 'hidden' },
   settingsItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, borderBottomWidth: 0.5 },
@@ -143,6 +159,6 @@ const styles = StyleSheet.create({
   modalDesc: { fontSize: FontSize.sm, fontFamily: FontFamily.regular, textAlign: 'center', marginTop: Spacing.sm, lineHeight: 20 },
   modalInput: { width: '100%', height: 48, borderRadius: Radius.md, borderWidth: 1, paddingHorizontal: Spacing.lg, fontSize: FontSize.base, fontFamily: FontFamily.medium, marginTop: Spacing.md, textAlign: 'center' },
   modalActions: { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.lg, width: '100%' },
-  modalBtn: { flex: 1, height: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
+  modalBtn: { flex: 1, height: 52, borderRadius: Radius.lg, alignItems: 'center', justifyContent: 'center' },
   modalBtnText: { fontSize: FontSize.base, fontFamily: FontFamily.bold, fontWeight: '700' },
 });

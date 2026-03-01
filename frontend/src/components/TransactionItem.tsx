@@ -24,7 +24,7 @@ export default function TransactionItem({ transaction, index = 0, onPress, onDel
       <TouchableOpacity
         testID={`delete-transaction-${transaction.id}`}
         onPress={onDelete}
-        style={styles.deleteAction}
+        style={[styles.deleteAction, { backgroundColor: colors.danger }]}
         activeOpacity={0.8}
       >
         <Ionicons name="trash" size={22} color="#FFF" />

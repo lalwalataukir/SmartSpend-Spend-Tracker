@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, interpolateColor } from 'react-native-reanimated';
+import { format, isToday, subDays, addDays, startOfDay } from 'date-fns';
 import { useTheme } from '../context/ThemeContext';
 import { Spacing, FontSize, Radius, FontFamily } from '../constants/theme';
 import { PAYMENT_METHODS } from '../constants/categories';
@@ -19,7 +20,7 @@ const AnimatedToggle = ({ value, onToggle, colors }: { value: boolean; onToggle:
   }, [value]);
 
   const trackStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(progress.value, [0, 1], ['#D1D5DB', colors.primary]),
+    backgroundColor: interpolateColor(progress.value, [0, 1], [colors.border, colors.primary]),
   }));
 
   const thumbStyle = useAnimatedStyle(() => ({
@@ -38,7 +39,7 @@ const AnimatedToggle = ({ value, onToggle, colors }: { value: boolean; onToggle:
 interface AddTransactionSheetProps {
   visible: boolean;
   onClose: () => void;
-  onSaved: (id: number) => void;
+  onSaved: (id?: number) => void;
   editTransaction?: Transaction | null;
 }
 
@@ -47,6 +48,7 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
   const [amountStr, setAmountStr] = useState('0');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [note, setNote] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [paymentMethod, setPaymentMethod] = useState(defaultPaymentMethod);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState<'weekly' | 'monthly'>('monthly');
@@ -61,6 +63,7 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
         setAmountStr(editTransaction.amount.toString());
         setSelectedCategoryId(editTransaction.categoryId);
         setNote(editTransaction.note || '');
+        setSelectedDate(new Date(editTransaction.date));
         setPaymentMethod(editTransaction.paymentMethod);
         setIsRecurring(!!editTransaction.isRecurring);
         setRecurringInterval(editTransaction.recurringIntervalDays === 7 ? 'weekly' : 'monthly');
@@ -70,6 +73,7 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
         setAmountStr('0');
         setSelectedCategoryId(null);
         setNote('');
+        setSelectedDate(new Date());
         setPaymentMethod(defaultPaymentMethod);
         setIsRecurring(false);
         setIsSplit(false);
@@ -102,7 +106,7 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
       amount,
       categoryId: selectedCategoryId!,
       note,
-      date: Date.now(),
+      date: editTransaction ? selectedDate.getTime() : (isToday(selectedDate) ? Date.now() : startOfDay(selectedDate).getTime() + 12 * 60 * 60 * 1000),
       paymentMethod,
       isRecurring: isRecurring ? 1 : 0,
       recurringIntervalDays: isRecurring ? (recurringInterval === 'weekly' ? 7 : 30) : null,
@@ -150,6 +154,32 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
               </Text>
             </View>
 
+            {/* Date Picker */}
+            <View style={[styles.dateRow, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+              <TouchableOpacity
+                onPress={() => setSelectedDate(subDays(selectedDate, 1))}
+                style={styles.dateArrow}
+              >
+                <Ionicons name="chevron-back" size={20} color={colors.primary} />
+              </TouchableOpacity>
+              <View style={styles.dateLabelContainer}>
+                <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} style={{ marginRight: 6 }} />
+                <Text style={[styles.dateText, { color: colors.text }]}>
+                  {isToday(selectedDate) ? 'Today' : format(selectedDate, 'dd MMM yyyy')}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  const tomorrow = addDays(selectedDate, 1);
+                  if (tomorrow <= new Date()) setSelectedDate(tomorrow);
+                }}
+                style={styles.dateArrow}
+                disabled={isToday(selectedDate)}
+              >
+                <Ionicons name="chevron-forward" size={20} color={isToday(selectedDate) ? colors.border : colors.primary} />
+              </TouchableOpacity>
+            </View>
+
             {/* Category Chips */}
             <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Category</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow}>
@@ -160,8 +190,7 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
                   onPress={() => setSelectedCategoryId(cat.id)}
                   style={[
                     styles.chip,
-                    { borderColor: selectedCategoryId === cat.id ? colors.primary : colors.border },
-                    selectedCategoryId === cat.id && { backgroundColor: colors.primary + '15' },
+                    { backgroundColor: selectedCategoryId === cat.id ? colors.primary + '18' : colors.surface },
                   ]}
                 >
                   <Text style={styles.chipEmoji}>{cat.emoji}</Text>
@@ -192,8 +221,7 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
                   onPress={() => setPaymentMethod(method)}
                   style={[
                     styles.paymentChip,
-                    { borderColor: paymentMethod === method ? colors.primary : colors.border },
-                    paymentMethod === method && { backgroundColor: colors.primary },
+                    { backgroundColor: paymentMethod === method ? colors.primary : colors.surface },
                   ]}
                 >
                   <Text style={[styles.paymentText, {
@@ -218,8 +246,7 @@ export default function AddTransactionSheet({ visible, onClose, onSaved, editTra
                     onPress={() => setRecurringInterval(interval)}
                     style={[
                       styles.paymentChip,
-                      { borderColor: recurringInterval === interval ? colors.primary : colors.border, flex: 1 },
-                      recurringInterval === interval && { backgroundColor: colors.primary },
+                      { backgroundColor: recurringInterval === interval ? colors.primary : colors.surface, flex: 1 },
                     ]}
                   >
                     <Text style={[styles.paymentText, {
@@ -279,6 +306,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: Radius.xl,
     paddingBottom: Platform.OS === 'ios' ? 34 : 16,
     maxHeight: '95%',
+    flexDirection: 'column',
   },
   dragHandleWrapper: {
     alignItems: 'center',
@@ -309,8 +337,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   scrollContent: {
-    maxHeight: 260,
     paddingHorizontal: Spacing.lg,
+    flexGrow: 1,
   },
   amountSection: {
     flexDirection: 'row',
@@ -338,16 +366,42 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  dateArrow: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Radius.sm,
+  },
+  dateLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: FontSize.base,
+    fontFamily: FontFamily.semiBold,
+    fontWeight: '600',
+  },
   chipsRow: {
     marginBottom: Spacing.sm,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.full,
-    borderWidth: 1.5,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm + 2,
+    borderRadius: Radius.lg,
+    borderWidth: 0,
     marginRight: Spacing.sm,
   },
   chipEmoji: {
@@ -375,9 +429,9 @@ const styles = StyleSheet.create({
   },
   paymentChip: {
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.full,
-    borderWidth: 1.5,
+    paddingVertical: Spacing.sm + 2,
+    borderRadius: Radius.lg,
+    borderWidth: 0,
     alignItems: 'center',
   },
   paymentText: {
@@ -399,7 +453,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#D1D5DB',
     justifyContent: 'center',
     paddingHorizontal: 2,
   },
@@ -416,8 +469,8 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     marginHorizontal: Spacing.lg,
-    height: 52,
-    borderRadius: Radius.md,
+    height: 56,
+    borderRadius: Radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: Spacing.sm,

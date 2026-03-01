@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { useTheme } from '../context/ThemeContext';
-import { Spacing, FontSize, FontFamily } from '../constants/theme';
+import { Spacing, FontSize, FontFamily, Radius } from '../constants/theme';
 import { formatCurrency } from '../utils/format';
 
 interface DonutChartProps {
@@ -19,17 +19,20 @@ interface DonutChartProps {
 
 export default function DonutChart({ data, total, size = 180, strokeWidth = 28 }: DonutChartProps) {
     const { colors } = useTheme();
+    const [showAll, setShowAll] = useState(false);
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
     const center = size / 2;
 
     let cumulativePercent = 0;
 
+    const visibleData = data.length > 6 && !showAll ? data.slice(0, 6) : data;
+    const hasMore = data.length > 6;
+
     return (
         <View style={styles.container}>
             <View style={styles.chartWrapper}>
                 <Svg width={size} height={size}>
-                    {/* Background circle */}
                     <Circle
                         cx={center}
                         cy={center}
@@ -38,7 +41,6 @@ export default function DonutChart({ data, total, size = 180, strokeWidth = 28 }
                         stroke={colors.border}
                         strokeWidth={strokeWidth}
                     />
-                    {/* Data arcs */}
                     <G rotation="-90" origin={`${center}, ${center}`}>
                         {data.map((item, index) => {
                             const percent = total > 0 ? item.value / total : 0;
@@ -63,16 +65,14 @@ export default function DonutChart({ data, total, size = 180, strokeWidth = 28 }
                         })}
                     </G>
                 </Svg>
-                {/* Center text */}
                 <View style={[styles.centerLabel, { top: center - 24, left: 0, right: 0 }]}>
                     <Text style={[styles.centerTotal, { color: colors.text }]}>{formatCurrency(total)}</Text>
                     <Text style={[styles.centerSubtitle, { color: colors.textSecondary }]}>Total</Text>
                 </View>
             </View>
 
-            {/* Legend */}
             <View style={styles.legend}>
-                {data.slice(0, 6).map((item, index) => {
+                {visibleData.map((item, index) => {
                     const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
                     return (
                         <View key={index} style={styles.legendItem}>
@@ -90,6 +90,16 @@ export default function DonutChart({ data, total, size = 180, strokeWidth = 28 }
                     );
                 })}
             </View>
+            {hasMore && (
+                <TouchableOpacity
+                    onPress={() => setShowAll(!showAll)}
+                    style={[styles.showAllButton, { backgroundColor: colors.primary + '12' }]}
+                >
+                    <Text style={[styles.showAllText, { color: colors.primary }]}>
+                        {showAll ? 'Show Less' : `Show All (${data.length})`}
+                    </Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
 }
@@ -152,5 +162,17 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
+    },
+    showAllButton: {
+        alignSelf: 'center',
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.xs,
+        borderRadius: Radius.md,
+        marginTop: Spacing.xs,
+    },
+    showAllText: {
+        fontSize: FontSize.xs,
+        fontFamily: FontFamily.semiBold,
+        fontWeight: '600',
     },
 });

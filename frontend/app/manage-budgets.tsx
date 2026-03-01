@@ -1,15 +1,17 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, SafeAreaView, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Modal, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../src/context/ThemeContext';
-import { Spacing, FontSize, Radius } from '../src/constants/theme';
+import { Spacing, FontSize, Radius, FontFamily } from '../src/constants/theme';
 import { getAllCategories, getAllBudgetsForMonth, upsertBudget, deleteBudget, getTotalForCategoryInRange, type Category, type Budget } from '../src/db/database';
 import { formatCurrency, getMonthYearKey, getCurrentMonthRange, formatMonthYear } from '../src/utils/format';
 
 export default function ManageBudgetsScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [categories, setCategories] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [spending, setSpending] = useState<Map<number, number>>(new Map());
@@ -58,8 +60,8 @@ export default function ManageBudgetsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} testID="manage-budgets-screen">
-      <View style={styles.header}>
+    <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: insets.top }]} testID="manage-budgets-screen">
+      <View style={[styles.header, Platform.OS === 'android' && { paddingTop: Math.max(insets.top, Spacing.lg) + Spacing.sm }]}>
         <TouchableOpacity testID="back-btn" onPress={() => router.back()} style={styles.backBtn}><Ionicons name="arrow-back" size={24} color={colors.text} /></TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={[styles.title, { color: colors.text }]}>Manage Budgets</Text>
@@ -105,7 +107,7 @@ export default function ManageBudgetsScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -113,26 +115,26 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.md },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: FontSize.xl, fontWeight: '800', marginLeft: Spacing.sm },
-  subtitle: { fontSize: FontSize.sm, marginLeft: Spacing.sm, marginTop: 2 },
+  title: { fontSize: FontSize.xl, fontFamily: FontFamily.extraBold, fontWeight: '800', marginLeft: Spacing.sm },
+  subtitle: { fontSize: FontSize.sm, fontFamily: FontFamily.medium, marginLeft: Spacing.sm, marginTop: 2 },
   scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 40 },
-  catRow: { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, borderRadius: Radius.md, marginBottom: Spacing.sm, borderWidth: 0.5 },
+  catRow: { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, borderRadius: Radius.lg, marginBottom: Spacing.sm, borderWidth: 0.5 },
   catIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   catEmoji: { fontSize: 22 },
   catInfo: { flex: 1, marginLeft: Spacing.md },
-  catName: { fontSize: FontSize.base, fontWeight: '600' },
+  catName: { fontSize: FontSize.base, fontFamily: FontFamily.semiBold, fontWeight: '600' },
   progressBar: { height: 6, borderRadius: 3, marginTop: 6, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 3 },
-  budgetText: { fontSize: FontSize.xs, marginTop: 4 },
-  noBudgetText: { fontSize: FontSize.sm, marginTop: 4 },
+  budgetText: { fontSize: FontSize.xs, fontFamily: FontFamily.regular, marginTop: 4 },
+  noBudgetText: { fontSize: FontSize.sm, fontFamily: FontFamily.regular, marginTop: 4 },
   actions: { flexDirection: 'row', gap: Spacing.xs },
   actionBtn: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   modal: { width: '100%', borderRadius: Radius.lg, padding: Spacing.xl },
-  modalTitle: { fontSize: FontSize.lg, fontWeight: '800', marginBottom: Spacing.md },
-  modalLabel: { fontSize: FontSize.sm, marginBottom: Spacing.sm },
+  modalTitle: { fontSize: FontSize.lg, fontFamily: FontFamily.extraBold, fontWeight: '800', marginBottom: Spacing.md },
+  modalLabel: { fontSize: FontSize.sm, fontFamily: FontFamily.medium, marginBottom: Spacing.sm },
   input: { height: 52, borderRadius: Radius.md, borderWidth: 1, paddingHorizontal: Spacing.lg, fontSize: FontSize.xl },
   modalActions: { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.xl },
   modalBtn: { flex: 1, height: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
-  modalBtnText: { fontSize: FontSize.base, fontWeight: '700' },
+  modalBtnText: { fontSize: FontSize.base, fontFamily: FontFamily.bold, fontWeight: '700' },
 });

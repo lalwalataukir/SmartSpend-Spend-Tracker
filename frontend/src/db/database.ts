@@ -175,7 +175,12 @@ export function getTotalForCategoryInRange(catId: number, startMs: number, endMs
 export function searchTransactions(query: string): TransactionWithCategory[] {
   const q = query.toLowerCase();
   return txCache
-    .filter(t => (t.note || '').toLowerCase().includes(q))
+    .filter(t => {
+      const note = (t.note || '').toLowerCase();
+      const cat = catCache.find(c => c.id === t.categoryId);
+      const categoryName = (cat?.name || '').toLowerCase();
+      return note.includes(q) || categoryName.includes(q);
+    })
     .sort((a, b) => b.date - a.date)
     .map(enrichTransaction);
 }
@@ -200,6 +205,10 @@ export function deleteTransaction(id: number): void {
 
 export function getTransactionById(id: number): Transaction | null {
   return txCache.find(t => t.id === id) || null;
+}
+
+export function getTransactionCountForCategory(categoryId: number): number {
+  return txCache.filter(t => t.categoryId === categoryId).length;
 }
 
 // Category queries
@@ -294,5 +303,5 @@ export async function deleteAllData(): Promise<void> {
   nextTxId = 1;
   nextCatId = 13;
   nextBudgetId = 1;
-  await persist();
+  await persistNow();
 }
