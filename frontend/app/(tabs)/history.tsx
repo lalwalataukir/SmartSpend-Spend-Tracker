@@ -103,7 +103,7 @@ export default function HistoryScreen() {
   ];
 
   return (
-    <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: insets.top }]} testID="history-screen">
+    <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, Spacing.xl) }]} testID="history-screen">
       <View style={[styles.header, Platform.OS === 'android' && { paddingTop: Math.max(insets.top, Spacing.lg) + Spacing.sm }]}><Text style={[styles.title, { color: colors.text }]}>History</Text></View>
 
       <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>

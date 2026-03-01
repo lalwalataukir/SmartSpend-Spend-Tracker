@@ -84,7 +84,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: insets.top }]} testID="home-screen">
+    <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, Spacing.xl) }]} testID="home-screen">
       <View style={[styles.header, Platform.OS === 'android' && { paddingTop: Math.max(insets.top, Spacing.lg) + Spacing.sm }]}>
         <View>
           <Text style={[styles.appTitle, { color: colors.primary }]}>SmartSpend</Text>

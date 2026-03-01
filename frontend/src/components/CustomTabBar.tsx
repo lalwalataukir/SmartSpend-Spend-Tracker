@@ -22,7 +22,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: any) {
     const insets = useSafeAreaInsets();
 
     return (
-        <View style={[styles.container, { backgroundColor: 'transparent', paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <View style={[styles.container, { backgroundColor: 'transparent', paddingBottom: Math.max(insets.bottom, 20) }]}>
             <View style={[
                 styles.tabBar,
                 {
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         paddingHorizontal: 16,
-        paddingBottom: 12,
+        paddingBottom: 20,
         paddingTop: 6,
     },
     tabBar: {
